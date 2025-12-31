@@ -1,0 +1,48 @@
+═══════════════════════════════════════════════════════════════════════
+  INSTRUCTIONS : Modifier le fichier .env
+═══════════════════════════════════════════════════════════════════════
+
+1. Ouvrir le fichier .env dans un éditeur de texte
+
+2. Trouver ces 2 lignes :
+   PROXY_WALLET=0xbb1C89C4fB47DFCcB16830F39A3d87b966D8Bfd2
+   PRIVATE_KEY=votre_ancienne_clé
+
+3. Les remplacer par :
+   PROXY_WALLET=0xVOTRE_NOUVELLE_ADRESSE
+   PRIVATE_KEY=votre_nouvelle_clé_SANS_0x
+
+   EXEMPLE :
+   Si MetaMask affiche : 0x1234567890abcdef...
+   
+   Mettre dans .env :
+   PROXY_WALLET=0x1234567890abcdef...
+   PRIVATE_KEY=1234567890abcdef...  (SANS le 0x au début)
+
+4. SUPPRIMER ces lignes si elles existent :
+   POLY_API_KEY=...
+   POLY_SECRET=...
+   POLY_PASSPHRASE=...
+
+5. SAUVEGARDER le fichier .env
+
+═══════════════════════════════════════════════════════════════════════
+  ÉTAPE SUIVANTE
+═══════════════════════════════════════════════════════════════════════
+
+AVANT de lancer le bot, vous devez TRANSFÉRER des fonds :
+
+Sur le réseau POLYGON (PAS Ethereum !) :
+  • Minimum $10 USDC
+  • Minimum $3 MATIC (pour les frais)
+
+Comment transférer depuis votre Gnosis Safe :
+  1. Aller sur https://app.safe.global
+  2. Connecter votre Safe
+  3. Sélectionner le réseau POLYGON
+  4. Envoyer vers votre nouvelle adresse
+
+OU utiliser un bridge si vos fonds sont sur Ethereum :
+  • https://wallet.polygon.technology/polygon/bridge
+
+═══════════════════════════════════════════════════════════════════════

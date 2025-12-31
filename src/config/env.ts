@@ -2,6 +2,21 @@ import * as dotenv from 'dotenv';
 import { CopyStrategy, CopyStrategyConfig, parseTieredMultipliers } from './copyStrategy';
 dotenv.config();
 
+// Normalize POLY_SECRET if present: convert URL-safe base64 to standard base64 with padding
+const normalizeBase64 = (s?: string): string => {
+    if (!s) return '';
+    let normalized = s.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = normalized.length % 4;
+    if (pad !== 0) normalized += '='.repeat(4 - pad);
+    return normalized;
+};
+
+const POLY_API_KEY_PRESENT = !!process.env.POLY_API_KEY;
+const POLY_SECRET_PRESENT = !!process.env.POLY_SECRET;
+if (POLY_API_KEY_PRESENT || POLY_SECRET_PRESENT) {
+    console.log(`POLY_* present in environment: API_KEY=${POLY_API_KEY_PRESENT}, SECRET=${POLY_SECRET_PRESENT}`);
+}
+
 /**
  * Validate Ethereum address format
  */
@@ -328,9 +343,14 @@ export const ENV = {
     PRIVATE_KEY: process.env.PRIVATE_KEY as string,
     CLOB_HTTP_URL: process.env.CLOB_HTTP_URL as string,
     CLOB_WS_URL: process.env.CLOB_WS_URL as string,
+    POLY_API_KEY: process.env.POLY_API_KEY as string | undefined,
+    POLY_SECRET: normalizeBase64(process.env.POLY_SECRET) as string | undefined,
+    POLY_PASSPHRASE: process.env.POLY_PASSPHRASE as string | undefined,
     FETCH_INTERVAL: parseInt(process.env.FETCH_INTERVAL || '1', 10),
     TOO_OLD_TIMESTAMP: parseInt(process.env.TOO_OLD_TIMESTAMP || '24', 10),
     RETRY_LIMIT: parseInt(process.env.RETRY_LIMIT || '3', 10),
+    DRY_RUN: process.env.DRY_RUN === 'true',
+    SIMULATION_STARTING_BALANCE: parseFloat(process.env.SIMULATION_STARTING_BALANCE || '1000.0'),
     // Legacy parameters (kept for backward compatibility)
     TRADE_MULTIPLIER: parseFloat(process.env.TRADE_MULTIPLIER || '1.0'),
     COPY_PERCENTAGE: parseFloat(process.env.COPY_PERCENTAGE || '10.0'),
@@ -348,4 +368,7 @@ export const ENV = {
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string,
+    // Minimum order sizes
+    MIN_ORDER_SIZE_USD: parseFloat(process.env.MIN_ORDER_SIZE_USD || '1.0'),
+    MIN_ORDER_SIZE_TOKENS: parseFloat(process.env.MIN_ORDER_SIZE_TOKENS || '1.0'),
 };

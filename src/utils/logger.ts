@@ -5,6 +5,9 @@ import * as path from 'path';
 class Logger {
     private static logsDir = path.join(process.cwd(), 'logs');
     private static currentLogFile = '';
+    // When true, only allow logs that match the allowedPattern to be printed
+    private static filterOnlyOrderLog = process.env.ONLY_SHOW_ORDER_LOG === 'true';
+    private static allowedPattern = /signedOrderSignatureType/;
 
     private static getLogFileName(): string {
         const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -44,6 +47,7 @@ class Logger {
     }
 
     static header(title: string) {
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(title)) return;
         console.log('\n' + chalk.cyan('━'.repeat(70)));
         console.log(chalk.cyan.bold(`  ${title}`));
         console.log(chalk.cyan('━'.repeat(70)) + '\n');
@@ -51,26 +55,32 @@ class Logger {
     }
 
     static info(message: string) {
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(message)) return;
         console.log(chalk.blue('ℹ'), message);
         this.writeToFile(`INFO: ${message}`);
     }
 
     static success(message: string) {
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(message)) return;
         console.log(chalk.green('✓'), message);
         this.writeToFile(`SUCCESS: ${message}`);
     }
 
     static warning(message: string) {
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(message)) return;
         console.log(chalk.yellow('⚠'), message);
         this.writeToFile(`WARNING: ${message}`);
     }
 
     static error(message: string) {
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(message)) return;
         console.log(chalk.red('✗'), message);
         this.writeToFile(`ERROR: ${message}`);
     }
 
     static trade(traderAddress: string, action: string, details: any) {
+        const combined = `${traderAddress} ${action} ${JSON.stringify(details)}`;
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(combined)) return;
         console.log('\n' + chalk.magenta('─'.repeat(70)));
         console.log(chalk.magenta.bold('📊 NEW TRADE DETECTED'));
         console.log(chalk.gray(`Trader: ${this.formatAddress(traderAddress)}`));
@@ -123,6 +133,7 @@ class Logger {
     }
 
     static orderResult(success: boolean, message: string) {
+        if (this.filterOnlyOrderLog && !this.allowedPattern.test(message)) return;
         if (success) {
             console.log(chalk.green('✓'), chalk.green.bold('Order executed:'), message);
             this.writeToFile(`ORDER SUCCESS: ${message}`);

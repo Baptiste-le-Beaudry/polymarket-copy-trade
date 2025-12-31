@@ -3,18 +3,21 @@ import { ENV } from '../config/env';
 import { UserActivityInterface, UserPositionInterface } from '../interfaces/User';
 import { getUserActivityModel } from '../models/userHistory';
 import Logger from './logger';
+import * as crypto from 'crypto';
 import { calculateOrderSize, getTradeMultiplier } from '../config/copyStrategy';
+import { getSimulationTracker } from './simulationBalance';
 
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
 const COPY_STRATEGY_CONFIG = ENV.COPY_STRATEGY_CONFIG;
+const PROXY_WALLET = ENV.PROXY_WALLET;
 
 // Legacy parameters (for backward compatibility in SELL logic)
 const TRADE_MULTIPLIER = ENV.TRADE_MULTIPLIER;
 const COPY_PERCENTAGE = ENV.COPY_PERCENTAGE;
 
-// Polymarket minimum order sizes
-const MIN_ORDER_SIZE_USD = 1.0; // Minimum order size in USD for BUY orders
-const MIN_ORDER_SIZE_TOKENS = 1.0; // Minimum order size in tokens for SELL/MERGE orders
+// Polymarket minimum order sizes (from env)
+const MIN_ORDER_SIZE_USD = ENV.MIN_ORDER_SIZE_USD ?? 1.0; // Minimum order size in USD for BUY orders
+const MIN_ORDER_SIZE_TOKENS = ENV.MIN_ORDER_SIZE_TOKENS ?? 1.0; // Minimum order size in tokens for SELL/MERGE orders
 
 const extractOrderError = (response: unknown): string | undefined => {
     if (!response) {
@@ -73,7 +76,88 @@ const postOrder = async (
     user_balance: number,
     userAddress: string
 ) => {
+    // Get UserActivity model first (needed for both real and simulation modes)
     const UserActivity = getUserActivityModel(userAddress);
+
+    // DRY RUN MODE - Skip actual order execution
+    if (ENV.DRY_RUN) {
+        const simTracker = getSimulationTracker();
+        Logger.info('🧪 DRY RUN MODE - Simulation only (no real trades)');
+        
+        if (condition === 'buy') {
+            const virtualBalance = simTracker.getBalance();
+            const orderCalc = calculateOrderSize(
+                COPY_STRATEGY_CONFIG,
+                trade.usdcSize,
+                virtualBalance,
+                my_position ? my_position.size * my_position.avgPrice : 0
+            );
+            Logger.info(`📊 ${orderCalc.reasoning}`);
+            
+            if (orderCalc.finalAmount > 0 && trade.price) {
+                try {
+                    simTracker.buy(trade.asset, orderCalc.finalAmount, trade.price);
+                    Logger.success(`✓ [SIMULATION] BUY executed: $${orderCalc.finalAmount.toFixed(2)} @ $${trade.price.toFixed(4)}`);
+                } catch (error) {
+                    Logger.error(`❌ [SIMULATION] BUY failed: ${error instanceof Error ? error.message : String(error)}`);
+                }
+            } else {
+                Logger.warning(`⚠️ [SIMULATION] Order too small or missing price`);
+            }
+        } else if (condition === 'sell') {
+            const virtualPosition = simTracker.getPosition(trade.asset);
+            if (virtualPosition && trade.price) {
+                const tokensToSell = Math.min(virtualPosition.size, trade.size || virtualPosition.size);
+                try {
+                    simTracker.sell(trade.asset, tokensToSell, trade.price);
+                    Logger.success(`✓ [SIMULATION] SELL executed: ${tokensToSell.toFixed(2)} tokens @ $${trade.price.toFixed(4)}`);
+                } catch (error) {
+                    Logger.error(`❌ [SIMULATION] SELL failed: ${error instanceof Error ? error.message : String(error)}`);
+                }
+            } else {
+                Logger.warning(`⚠️ [SIMULATION] No virtual position to sell`);
+            }
+        } else if (condition === 'merge') {
+            Logger.success(`✓ [SIMULATION] Would MERGE positions for ${trade.asset.substring(0, 8)}...`);
+        }
+        
+        await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+        return;
+    }
+    
+    // Helper to compute and log local POLY headers for debugging
+    const urlSafeBase64 = (base64: string) => base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const logPolyDebug = (signedOrder: any, owner: string) => {
+        try {
+            if (!process.env.POLY_SECRET) return;
+            const bodyForSig = JSON.stringify({ deferExec: false, order: signedOrder, owner, orderType: OrderType.FOK });
+            const ts = Math.floor(Date.now() / 1000).toString();
+            const secretRaw = process.env.POLY_SECRET as string;
+            let localSigRaw: string | null = null;
+            let localSigNormalized: string | null = null;
+            try {
+                const base64SecretRaw = Buffer.from(secretRaw, 'base64');
+                const hmacRaw = crypto.createHmac('sha256', base64SecretRaw).update(String(ts) + 'POST' + '/order' + bodyForSig).digest('base64');
+                localSigRaw = urlSafeBase64(hmacRaw);
+            } catch (e) {
+                // ignore
+            }
+            try {
+                const normalized = secretRaw.replace(/-/g, '+').replace(/_/g, '/');
+                const base64SecretNorm = Buffer.from(normalized, 'base64');
+                const hmacNorm = crypto.createHmac('sha256', base64SecretNorm).update(String(ts) + 'POST' + '/order' + bodyForSig).digest('base64');
+                localSigNormalized = urlSafeBase64(hmacNorm);
+            } catch (e) {
+                // ignore
+            }
+            Logger.info(JSON.stringify({ DEBUG_POLY_TIMESTAMP: ts, DEBUG_POLY_COMPUTED_SIGNATURE_RAW: localSigRaw, DEBUG_POLY_COMPUTED_SIGNATURE_NORMALIZED: localSigNormalized, DEBUG_POLY_API_KEY: process.env.POLY_API_KEY || null }));
+            // Also log the exact payload string used for the HMAC (helps detect serialization differences)
+            Logger.info(JSON.stringify({ DEBUG_POLY_SENT_PAYLOAD: bodyForSig }));
+        } catch (e) {
+            Logger.error('DEBUG_POLY failed: ' + String(e));
+        }
+    };
+    
     //Merge strategy
     if (condition === 'merge') {
         Logger.info('Executing MERGE strategy...');
@@ -125,7 +209,24 @@ const postOrder = async (
                 };
             }
             // Order args logged internally
-            const signedOrder = await clobClient.createMarketOrder(order_arges);
+            Logger.info(`DEBUG: before createMarketOrder ${JSON.stringify(order_arges)}`);
+            let signedOrder: any;
+            try {
+                signedOrder = await clobClient.createMarketOrder(order_arges);
+            } catch (err) {
+                Logger.error(`ERROR createMarketOrder ${String(err)}`);
+                console.error('ERROR createMarketOrder', err);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                break;
+            }
+            Logger.clearLine();
+            Logger.info(JSON.stringify({
+                signedOrderSignatureType: (signedOrder as any).signatureType,
+                maker: (signedOrder as any).maker,
+                signer: (signedOrder as any).signer,
+            }));
+            // Debug: compute and log local POLY headers/signature for inspection
+            logPolyDebug(signedOrder, PROXY_WALLET as string);
             const resp = await clobClient.postOrder(signedOrder, OrderType.FOK);
             if (resp.success === true) {
                 retry = 0;
@@ -246,7 +347,19 @@ const postOrder = async (
                 `Creating order: $${orderSize.toFixed(2)} @ $${minPriceAsk.price} (Balance: $${my_balance.toFixed(2)})`
             );
             // Order args logged internally
-            const signedOrder = await clobClient.createMarketOrder(order_arges);
+            Logger.info(`DEBUG: before createMarketOrder ${JSON.stringify(order_arges)}`);
+            let signedOrder: any;
+            try {
+                signedOrder = await clobClient.createMarketOrder(order_arges);
+            } catch (err) {
+                Logger.error(`ERROR createMarketOrder ${String(err)}`);
+                console.error('ERROR createMarketOrder', err);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                break;
+            }
+            Logger.clearLine();
+            // Debug: compute and log local POLY headers/signature for inspection
+            logPolyDebug(signedOrder, PROXY_WALLET as string);
             const resp = await clobClient.postOrder(signedOrder, OrderType.FOK);
             if (resp.success === true) {
                 retry = 0;
@@ -437,7 +550,19 @@ const postOrder = async (
                 price: parseFloat(maxPriceBid.price),
             };
             // Order args logged internally
-            const signedOrder = await clobClient.createMarketOrder(order_arges);
+            Logger.info(`DEBUG: before createMarketOrder ${JSON.stringify(order_arges)}`);
+            let signedOrder: any;
+            try {
+                signedOrder = await clobClient.createMarketOrder(order_arges);
+            } catch (err) {
+                Logger.error(`ERROR createMarketOrder ${String(err)}`);
+                console.error('ERROR createMarketOrder', err);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                break;
+            }
+            Logger.clearLine();
+            // Debug: compute and log local POLY headers/signature for inspection
+            logPolyDebug(signedOrder, PROXY_WALLET as string);
             const resp = await clobClient.postOrder(signedOrder, OrderType.FOK);
             if (resp.success === true) {
                 retry = 0;

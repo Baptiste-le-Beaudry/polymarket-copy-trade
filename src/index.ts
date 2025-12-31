@@ -6,6 +6,7 @@ import tradeMonitor, { stopTradeMonitor } from './services/tradeMonitor';
 import Logger from './utils/logger';
 import { performHealthCheck, logHealthCheck } from './utils/healthCheck';
 import test from './test/test';
+import { getSimulationTracker } from './utils/simulationBalance';
 
 const USER_ADDRESSES = ENV.USER_ADDRESSES;
 const PROXY_WALLET = ENV.PROXY_WALLET;
@@ -97,6 +98,14 @@ export const main = async () => {
 
         Logger.info('Starting trade executor...');
         tradeExecutor(clobClient);
+
+        // Display simulation summary every 5 minutes if in DRY_RUN mode
+        if (ENV.DRY_RUN) {
+            setInterval(() => {
+                const simTracker = getSimulationTracker();
+                simTracker.printSummary();
+            }, 5 * 60 * 1000); // Every 5 minutes
+        }
 
         // test(clobClient);
     } catch (error) {

@@ -11,13 +11,16 @@ const createClobClient = async (): Promise<ClobClient> => {
     const chainId = 137;
     const host = CLOB_HTTP_URL as string;
     const wallet = new ethers.Wallet(PRIVATE_KEY as string);
+    
+    // Use EOA signature type for regular wallets (not Gnosis Safe proxy)
+    // SignatureType.EOA = 1 (for regular wallets)
+    // SignatureType.POLY_PROXY = 2 (for Gnosis Safe proxies only)
     let clobClient = new ClobClient(
         host,
         chainId,
         wallet,
         undefined,
-        SignatureType.POLY_PROXY,
-        PROXY_WALLET as string
+        SignatureType.EOA
     );
 
     const originalConsoleError = console.error;
@@ -36,8 +39,7 @@ const createClobClient = async (): Promise<ClobClient> => {
         chainId,
         wallet,
         creds,
-        SignatureType.POLY_PROXY,
-        PROXY_WALLET as string
+        SignatureType.EOA
     );
     console.log(clobClient);
     return clobClient;
