@@ -6,6 +6,7 @@ import fetchData from '../utils/fetchData';
 import getMyBalance from '../utils/getMyBalance';
 import postOrder from '../utils/postOrder';
 import Logger from '../utils/logger';
+import { getTraderCooldownManager } from '../utils/traderCooldown';
 
 const USER_ADDRESSES = ENV.USER_ADDRESSES;
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
@@ -13,6 +14,13 @@ const PROXY_WALLET = ENV.PROXY_WALLET;
 const TRADE_AGGREGATION_ENABLED = ENV.TRADE_AGGREGATION_ENABLED;
 const TRADE_AGGREGATION_WINDOW_SECONDS = ENV.TRADE_AGGREGATION_WINDOW_SECONDS;
 const TRADE_AGGREGATION_MIN_TOTAL_USD = 1.0; // Polymarket minimum
+const TRADER_COOLDOWN_ENABLED = ENV.TRADER_COOLDOWN_ENABLED;
+const TRADER_COOLDOWN_SECONDS = ENV.TRADER_COOLDOWN_SECONDS;
+
+// Initialize trader cooldown manager if enabled
+const traderCooldown = TRADER_COOLDOWN_ENABLED 
+    ? getTraderCooldownManager(TRADER_COOLDOWN_SECONDS)
+    : null;
 
 // Create activity models for each user
 const userActivityModels = USER_ADDRESSES.map((address) => ({
@@ -146,6 +154,17 @@ const getReadyAggregatedTrades = (): AggregatedTrade[] => {
 
 const doTrading = async (clobClient: ClobClient, trades: TradeWithUser[]) => {
     for (const trade of trades) {
+        // Check trader cooldown if enabled
+        if (TRADER_COOLDOWN_ENABLED && traderCooldown) {
+            if (!traderCooldown.shouldCopyTrade(trade.userAddress)) {
+                // Trader in cooldown - skip this trade
+                const UserActivity = getUserActivityModel(trade.userAddress);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                Logger.separator();
+                continue;
+            }
+        }
+
         // Mark trade as being processed immediately to prevent duplicate processing
         const UserActivity = getUserActivityModel(trade.userAddress);
         await UserActivity.updateOne({ _id: trade._id }, { $set: { botExcutedTime: 1 } });

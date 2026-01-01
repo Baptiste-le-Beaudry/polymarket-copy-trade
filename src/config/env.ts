@@ -365,6 +365,9 @@ export const ENV = {
         process.env.TRADE_AGGREGATION_WINDOW_SECONDS || '300',
         10
     ), // 5 minutes default
+    // Trader cooldown settings
+    TRADER_COOLDOWN_ENABLED: process.env.TRADER_COOLDOWN_ENABLED === 'true',
+    TRADER_COOLDOWN_SECONDS: parseInt(process.env.TRADER_COOLDOWN_SECONDS || '300', 10),
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string,
