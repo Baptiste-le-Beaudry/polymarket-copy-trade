@@ -6,15 +6,30 @@
 import { ENV } from '../config/env';
 import Logger from './logger';
 
+interface BalanceSnapshot {
+    timestamp: Date;
+    balance: number;
+    totalValue: number;
+    positionsCount: number;
+}
+
 class SimulationBalanceTracker {
     private balance: number;
     private positions: Map<string, { size: number; avgPrice: number }>;
     private readonly startingBalance: number;
+    private balanceHistory: BalanceSnapshot[];
+    private sessionStartTime: Date;
 
     constructor(startingBalance: number) {
         this.startingBalance = startingBalance;
         this.balance = startingBalance;
         this.positions = new Map();
+        this.balanceHistory = [];
+        this.sessionStartTime = new Date();
+        
+        // Record initial balance
+        this.recordSnapshot();
+        
         Logger.info(`💰 Simulation mode: Starting with $${startingBalance.toFixed(2)} virtual balance`);
     }
 
@@ -31,6 +46,26 @@ class SimulationBalanceTracker {
             asset,
             ...pos,
         }));
+    }
+
+    /**
+     * Record a snapshot of the current balance and portfolio value
+     */
+    private recordSnapshot(): void {
+        const currentPrices = new Map<string, number>();
+        // Use average prices for positions (in production, you'd fetch real prices)
+        for (const [asset, position] of this.positions.entries()) {
+            currentPrices.set(asset, position.avgPrice);
+        }
+
+        const snapshot: BalanceSnapshot = {
+            timestamp: new Date(),
+            balance: this.balance,
+            totalValue: this.getTotalValue(currentPrices),
+            positionsCount: this.positions.size,
+        };
+
+        this.balanceHistory.push(snapshot);
     }
 
     /**
@@ -57,6 +92,9 @@ class SimulationBalanceTracker {
         this.balance -= usdAmount;
         Logger.success(`✓ [VIRTUAL] Bought ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)}`);
         Logger.info(`💰 Virtual balance: $${this.balance.toFixed(2)}`);
+        
+        // Record snapshot after trade
+        this.recordSnapshot();
     }
 
     /**
@@ -82,6 +120,9 @@ class SimulationBalanceTracker {
 
         Logger.success(`✓ [VIRTUAL] Sold ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)}`);
         Logger.info(`💰 Virtual balance: $${this.balance.toFixed(2)}`);
+        
+        // Record snapshot after trade
+        this.recordSnapshot();
     }
 
     /**
@@ -124,7 +165,138 @@ class SimulationBalanceTracker {
     reset(): void {
         this.balance = this.startingBalance;
         this.positions.clear();
+        this.balanceHistory = [];
+        this.sessionStartTime = new Date();
+        this.recordSnapshot();
         Logger.info(`🔄 Virtual balance reset to $${this.startingBalance.toFixed(2)}`);
+    }
+
+    /**
+     * Generate an ASCII chart showing balance over time
+     */
+    generateChart(): void {
+        if (this.balanceHistory.length < 2) {
+            Logger.info('📊 Not enough data to generate chart (need at least 2 snapshots)');
+            return;
+        }
+
+        Logger.separator();
+        Logger.info('📊 BALANCE EVOLUTION CHART');
+        Logger.separator();
+
+        const history = this.balanceHistory;
+        const chartHeight = 15;
+        const chartWidth = 60;
+
+        // Find min/max values
+        const values = history.map(s => s.totalValue);
+        const minValue = Math.min(...values);
+        const maxValue = Math.max(...values);
+        const valueRange = maxValue - minValue || 1;
+
+        // Calculate performance
+        const startValue = history[0].totalValue;
+        const endValue = history[history.length - 1].totalValue;
+        const pnl = endValue - startValue;
+        const pnlPercent = ((endValue - startValue) / startValue) * 100;
+
+        // Display summary stats
+        Logger.info(`📅 Session Duration: ${this.getSessionDuration()}`);
+        Logger.info(`💰 Starting Value: $${startValue.toFixed(2)}`);
+        Logger.info(`💵 Current Value:  $${endValue.toFixed(2)}`);
+        const pnlColor = pnl >= 0 ? '🟢' : '🔴';
+        Logger.info(`${pnlColor} Profit/Loss:   $${pnl.toFixed(2)} (${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%)`);
+        Logger.info(`📈 Peak Value:     $${maxValue.toFixed(2)}`);
+        Logger.info(`📉 Lowest Value:   $${minValue.toFixed(2)}`);
+        Logger.separator();
+
+        // Generate ASCII chart
+        const chart: string[][] = Array(chartHeight).fill(null).map(() => Array(chartWidth).fill(' '));
+
+        // Plot line
+        for (let i = 0; i < chartWidth; i++) {
+            const dataIndex = Math.floor((i / chartWidth) * history.length);
+            const value = history[dataIndex].totalValue;
+            const normalizedValue = (value - minValue) / valueRange;
+            const yPos = chartHeight - 1 - Math.floor(normalizedValue * (chartHeight - 1));
+
+            // Draw point and connecting line
+            chart[yPos][i] = '●';
+            
+            // Fill vertical line for visual effect
+            if (i > 0) {
+                const prevDataIndex = Math.floor(((i - 1) / chartWidth) * history.length);
+                const prevValue = history[prevDataIndex].totalValue;
+                const prevNormalizedValue = (prevValue - minValue) / valueRange;
+                const prevYPos = chartHeight - 1 - Math.floor(prevNormalizedValue * (chartHeight - 1));
+
+                const minY = Math.min(yPos, prevYPos);
+                const maxY = Math.max(yPos, prevYPos);
+                for (let y = minY; y <= maxY; y++) {
+                    if (chart[y][i] === ' ') {
+                        chart[y][i] = '│';
+                    }
+                }
+            }
+        }
+
+        // Print chart with labels
+        console.log(`\n  $${maxValue.toFixed(0).padStart(6)} ┤`);
+        for (let y = 0; y < chartHeight; y++) {
+            const value = minValue + ((chartHeight - 1 - y) / (chartHeight - 1)) * valueRange;
+            if (y === Math.floor(chartHeight / 2)) {
+                console.log(`  $${value.toFixed(0).padStart(6)} ┤` + chart[y].join(''));
+            } else {
+                console.log(`         ┤` + chart[y].join(''));
+            }
+        }
+        console.log(`  $${minValue.toFixed(0).padStart(6)} ┤`);
+        console.log(`         └${'─'.repeat(chartWidth)}`);
+        console.log(`          ${this.formatTime(history[0].timestamp).padEnd(chartWidth / 2)}${this.formatTime(history[history.length - 1].timestamp).padStart(chartWidth / 2)}`);
+        
+        Logger.separator();
+
+        // Trade statistics
+        const totalTrades = history.length - 1;
+        Logger.info(`📊 Total Snapshots: ${totalTrades}`);
+        Logger.info(`📦 Current Positions: ${this.positions.size}`);
+        Logger.separator();
+    }
+
+    /**
+     * Get session duration as human-readable string
+     */
+    private getSessionDuration(): string {
+        const duration = Date.now() - this.sessionStartTime.getTime();
+        const hours = Math.floor(duration / (1000 * 60 * 60));
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m ${seconds}s`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    }
+
+    /**
+     * Format timestamp for chart labels
+     */
+    private formatTime(date: Date): string {
+        return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+        });
+    }
+
+    /**
+     * Get balance history data (for external analysis)
+     */
+    getBalanceHistory(): BalanceSnapshot[] {
+        return [...this.balanceHistory];
     }
 }
 

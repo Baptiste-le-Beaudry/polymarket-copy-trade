@@ -33,6 +33,12 @@ const gracefulShutdown = async (signal: string) => {
         Logger.info('Waiting for services to finish current operations...');
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
+        // Display final simulation chart if in DRY_RUN mode
+        if (ENV.DRY_RUN) {
+            const simTracker = getSimulationTracker();
+            simTracker.generateChart();
+        }
+
         // Close database connection
         await closeDB();
 
@@ -104,6 +110,7 @@ export const main = async () => {
             setInterval(() => {
                 const simTracker = getSimulationTracker();
                 simTracker.printSummary();
+                simTracker.generateChart();
             }, 5 * 60 * 1000); // Every 5 minutes
         }
 
