@@ -118,8 +118,8 @@ const fetchTradeData = async () => {
 
             // Process each activity
             for (const activity of activities) {
-                // Skip if too old
-                if (activity.timestamp < TOO_OLD_TIMESTAMP) {
+                // Skip if too old (but not on first run - we want to mark all historical trades)
+                if (!isFirstRun && activity.timestamp < TOO_OLD_TIMESTAMP) {
                     continue;
                 }
 
@@ -215,6 +215,272 @@ const fetchTradeData = async () => {
 let isFirstRun = true;
 // Track if monitor should continue running
 let isRunning = true;
+// Track last stale position check time
+let lastStaleCheckTime = 0;
+// Track last small position check time
+let lastSmallPositionCheckTime = 0;
+
+/**
+ * Check and auto-sell positions with < 1 token
+ */
+const checkAndSellSmallPositions = async () => {
+    const now = Date.now();
+    const checkInterval = 60 * 60 * 1000; // Check every hour
+
+    // Check if it's time to run the check
+    if (now - lastSmallPositionCheckTime < checkInterval) {
+        return;
+    }
+
+    lastSmallPositionCheckTime = now;
+
+    try {
+        // Get current positions from Polymarket
+        const myPositionsUrl = `https://data-api.polymarket.com/positions?user=${ENV.PROXY_WALLET}`;
+        const myPositions = await fetchData(myPositionsUrl);
+
+        if (!Array.isArray(myPositions)) {
+            return;
+        }
+
+        // Find positions with < 1 token
+        const smallPositions = myPositions.filter((p: any) => p.size > 0 && p.size < 1.0);
+
+        if (smallPositions.length === 0) {
+            return;
+        }
+
+        Logger.warning(`⚠️  Found ${smallPositions.length} position(s) with < 1 token`);
+        Logger.info('🔄 Auto-selling small positions...');
+
+        // Skip in DRY_RUN mode
+        if (ENV.DRY_RUN) {
+            Logger.info('🧪 DRY_RUN mode: Would sell small positions in production');
+            for (const pos of smallPositions) {
+                Logger.info(`  • ${pos.title || pos.slug || pos.asset.substring(0, 12)}... | ${pos.size.toFixed(4)} tokens`);
+            }
+            return;
+        }
+
+        const createClobClient = (await import('../utils/createClobClient')).default;
+        const clobClient = await createClobClient();
+        const { Side } = await import('@polymarket/clob-client');
+        const { getPositionTracker } = await import('../utils/positionTracker');
+        const tracker = getPositionTracker();
+
+        let soldCount = 0;
+        let errorCount = 0;
+
+        for (const smallPos of smallPositions) {
+            try {
+                // Get order book
+                const orderBook = await clobClient.getOrderBook(smallPos.asset);
+                if (!orderBook.bids || orderBook.bids.length === 0) {
+                    Logger.warning(`No bids for ${smallPos.title || smallPos.asset.substring(0, 12)}... - skipping`);
+                    errorCount++;
+                    continue;
+                }
+
+                const maxPriceBid = orderBook.bids.reduce((max, bid) => {
+                    return parseFloat(bid.price) > parseFloat(max.price) ? bid : max;
+                }, orderBook.bids[0]);
+
+                const sellAmount = Math.min(smallPos.size, parseFloat(maxPriceBid.size));
+
+                const signedOrder = await clobClient.createOrder({
+                    tokenID: smallPos.asset,
+                    size: sellAmount,
+                    price: parseFloat(maxPriceBid.price),
+                    side: Side.SELL,
+                    feeRateBps: 0,
+                });
+
+                const result = await clobClient.postOrder(signedOrder);
+
+                if (result.success) {
+                    Logger.success(`✅ Auto-sold small position: ${smallPos.title || smallPos.slug} (${sellAmount.toFixed(4)} tokens @ $${maxPriceBid.price})`);
+                    tracker.trackSell(smallPos.conditionId, sellAmount, parseFloat(maxPriceBid.price), sellAmount * parseFloat(maxPriceBid.price));
+                    soldCount++;
+                } else {
+                    Logger.error(`Failed to sell ${smallPos.title || smallPos.slug}`);
+                    errorCount++;
+                }
+
+                // Wait between sells
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+            } catch (error) {
+                Logger.error(`Error selling small position ${smallPos.title || smallPos.asset}: ${error}`);
+                errorCount++;
+            }
+        }
+
+        if (soldCount > 0 || errorCount > 0) {
+            Logger.info(`📊 Small position cleanup: ${soldCount} sold, ${errorCount} errors`);
+        }
+
+    } catch (error) {
+        Logger.error(`Error in small position check: ${error}`);
+    }
+};
+
+/**
+ * Check and auto-sell stale positions if enabled
+ */
+const checkAndSellStalePositions = async () => {
+    const AUTO_SELL_DAYS = ENV.AUTO_SELL_STALE_POSITIONS_DAYS;
+    
+    if (!AUTO_SELL_DAYS) {
+        return; // Feature disabled
+    }
+
+    const now = Date.now();
+    const checkIntervalHours = ENV.STALE_POSITION_CHECK_INTERVAL_HOURS || 24;
+    const checkInterval = checkIntervalHours * 60 * 60 * 1000;
+    const timeSinceLastCheck = now - lastStaleCheckTime;
+
+    // Check if it's time to run the check
+    if (timeSinceLastCheck < checkInterval) {
+        return;
+    }
+
+    Logger.info(`🔄 Running stale position check (interval: ${checkIntervalHours}h, looking for positions > ${AUTO_SELL_DAYS} day(s) old)...`);
+    lastStaleCheckTime = now;
+
+    try {
+        // Handle simulation mode differently
+        if (ENV.DRY_RUN) {
+            const { getSimulationTracker } = await import('../utils/simulationBalance');
+            const simTracker = getSimulationTracker();
+            const allPositions = simTracker.getAllPositions();
+            
+            Logger.info(`📊 [SIMULATION] Checking ${allPositions.length} positions for stale (> ${AUTO_SELL_DAYS} day(s))...`);
+            
+            // Debug: show position ages
+            for (const pos of allPositions) {
+                if (!pos.openedAt) {
+                    Logger.warning(`   Position ${pos.asset.slice(0, 8)}...: ⚠️ NO TIMESTAMP - marking as stale`);
+                } else {
+                    const ageMs = Date.now() - pos.openedAt;
+                    const ageHours = (ageMs / (1000 * 60 * 60)).toFixed(1);
+                    const ageDays = (ageMs / (1000 * 60 * 60 * 24)).toFixed(2);
+                    Logger.info(`   Position ${pos.asset.slice(0, 8)}...: age=${ageHours}h (${ageDays}d), stale=${parseFloat(ageDays) >= AUTO_SELL_DAYS}`);
+                }
+            }
+            
+            const stalePositions = simTracker.getOldPositions(AUTO_SELL_DAYS);
+
+            if (stalePositions.length === 0) {
+                Logger.info(`✅ [SIMULATION] No stale positions found (older than ${AUTO_SELL_DAYS} day(s))`);
+                return;
+            }
+
+            Logger.warning(`⚠️  [SIMULATION] Found ${stalePositions.length} stale positions (older than ${AUTO_SELL_DAYS} day(s))`);
+            Logger.info('🔄 [SIMULATION] Auto-selling stale positions...');
+
+            let soldCount = 0;
+            for (const stalePos of stalePositions) {
+                // In simulation, just remove the stale position
+                Logger.info(`📉 [SIMULATION] Selling stale position: ${stalePos.market || stalePos.asset} (${stalePos.size?.toFixed(2) || '0'} tokens)`);
+                simTracker.sellPosition(stalePos.asset, stalePos.size || 0, stalePos.avgPrice || 0);
+                soldCount++;
+            }
+
+            if (soldCount > 0) {
+                Logger.success(`✅ [SIMULATION] Auto-sold ${soldCount} stale positions`);
+            }
+            return;
+        }
+
+        // Real trading mode
+        const { getPositionTracker } = await import('../utils/positionTracker');
+        const tracker = getPositionTracker();
+        const stalePositions = tracker.getOldPositions(AUTO_SELL_DAYS);
+
+        if (stalePositions.length === 0) {
+            Logger.info(`✅ No stale positions found (older than ${AUTO_SELL_DAYS} days)`);
+            return;
+        }
+
+        Logger.warning(`⚠️  Found ${stalePositions.length} stale positions (older than ${AUTO_SELL_DAYS} days)`);
+        Logger.info('🔄 Auto-selling stale positions...');
+
+        // Get current positions from Polymarket
+        const myPositionsUrl = `https://data-api.polymarket.com/positions?user=${ENV.PROXY_WALLET}`;
+        const myPositions = await fetchData(myPositionsUrl);
+
+        if (!Array.isArray(myPositions)) {
+            Logger.error('Failed to fetch positions for stale check');
+            return;
+        }
+
+        const createClobClient = (await import('../utils/createClobClient')).default;
+        const clobClient = await createClobClient();
+        const { Side } = await import('@polymarket/clob-client');
+
+        let soldCount = 0;
+        let errorCount = 0;
+
+        for (const stalePos of stalePositions) {
+            // Find matching real position
+            const realPos = myPositions.find((p: any) => p.conditionId === stalePos.conditionId);
+            
+            if (!realPos || realPos.size < 1.0) {
+                // Position too small or doesn't exist, just remove from tracker
+                tracker.removePosition(stalePos.conditionId);
+                continue;
+            }
+
+            try {
+                // Get order book
+                const orderBook = await clobClient.getOrderBook(stalePos.asset);
+                if (!orderBook.bids || orderBook.bids.length === 0) {
+                    Logger.warning(`No bids for ${stalePos.market} - skipping`);
+                    continue;
+                }
+
+                const maxPriceBid = orderBook.bids.reduce((max, bid) => {
+                    return parseFloat(bid.price) > parseFloat(max.price) ? bid : max;
+                }, orderBook.bids[0]);
+
+                const sellAmount = Math.min(realPos.size, parseFloat(maxPriceBid.size));
+
+                const signedOrder = await clobClient.createOrder({
+                    tokenID: stalePos.asset,
+                    size: sellAmount,
+                    price: parseFloat(maxPriceBid.price),
+                    side: Side.SELL,
+                    feeRateBps: 0,
+                });
+
+                const result = await clobClient.postOrder(signedOrder);
+
+                if (result.success) {
+                    Logger.success(`✅ Auto-sold stale position: ${stalePos.market} (${sellAmount.toFixed(2)} tokens)`);
+                    tracker.trackSell(stalePos.conditionId, sellAmount, parseFloat(maxPriceBid.price), sellAmount * parseFloat(maxPriceBid.price));
+                    soldCount++;
+                } else {
+                    Logger.error(`Failed to sell ${stalePos.market}`);
+                    errorCount++;
+                }
+
+                // Wait between sells
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+            } catch (error) {
+                Logger.error(`Error selling stale position ${stalePos.market}: ${error}`);
+                errorCount++;
+            }
+        }
+
+        if (soldCount > 0 || errorCount > 0) {
+            Logger.info(`📊 Stale position cleanup: ${soldCount} sold, ${errorCount} errors`);
+        }
+
+    } catch (error) {
+        Logger.error(`Error in stale position check: ${error}`);
+    }
+};
 
 /**
  * Stop the trade monitor gracefully
@@ -250,6 +516,13 @@ const tradeMonitor = async () => {
 
     while (isRunning) {
         await fetchTradeData();
+        
+        // Check for stale positions if enabled
+        await checkAndSellStalePositions();
+        
+        // Check for small positions (< 1 token) and auto-sell
+        await checkAndSellSmallPositions();
+        
         if (!isRunning) break;
         await new Promise((resolve) => setTimeout(resolve, FETCH_INTERVAL * 1000));
     }

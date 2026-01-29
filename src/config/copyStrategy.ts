@@ -8,10 +8,13 @@
  * - ADAPTIVE: Dynamically adjust percentage based on trader's order size
  */
 
+import { ENV } from './env';
+
 export enum CopyStrategy {
     PERCENTAGE = 'PERCENTAGE',
     FIXED = 'FIXED',
     ADAPTIVE = 'ADAPTIVE',
+    FIXED_TOKENS = 'FIXED_TOKENS',
 }
 
 /**
@@ -33,6 +36,7 @@ export interface CopyStrategyConfig {
     // PERCENTAGE: Percentage of trader's order (e.g., 10.0 = 10%)
     // FIXED: Fixed dollar amount per trade (e.g., 50.0 = $50)
     // ADAPTIVE: Base percentage for adaptive scaling
+    // FIXED_TOKENS: Fixed number of tokens per trade (e.g., 3.0 = 3 tokens)
     copySize: number;
 
     // Adaptive strategy parameters (only used if strategy = ADAPTIVE)
@@ -96,6 +100,20 @@ export function calculateOrderSize(
             reasoning = `Adaptive ${adaptivePercent.toFixed(1)}% of trader's $${traderOrderSize.toFixed(2)} = $${baseAmount.toFixed(2)}`;
             break;
 
+        case CopyStrategy.FIXED_TOKENS:
+            // copySize = number of tokens to buy (e.g., 15.0)
+            // Skip all USD-based limits for FIXED_TOKENS - they don't apply to token counts
+            return {
+                traderOrderSize,
+                baseAmount: config.copySize,
+                finalAmount: config.copySize, // Always return exact token count
+                strategy: config.strategy,
+                cappedByMax: false,
+                reducedByBalance: false,
+                belowMinimum: false,
+                reasoning: `Fixed ${config.copySize} tokens (ignores USD limits)`,
+            };
+
         default:
             throw new Error(`Unknown strategy: ${config.strategy}`);
     }
@@ -133,12 +151,15 @@ export function calculateOrderSize(
         }
     }
 
-    // Step 4: Check available balance (with 1% safety buffer)
-    const maxAffordable = availableBalance * 0.99;
+    // Step 4: Check available balance (with reserve and 1% safety buffer)
+    const minReserve = ENV.MIN_CASH_RESERVE || 0;
+    const availableAfterReserve = Math.max(0, availableBalance - minReserve);
+    const maxAffordable = availableAfterReserve * 0.99;
+    
     if (finalAmount > maxAffordable) {
         finalAmount = maxAffordable;
         reducedByBalance = true;
-        reasoning += ` → Reduced to fit balance ($${maxAffordable.toFixed(2)})`;
+        reasoning += ` → Reduced to fit balance ($${maxAffordable.toFixed(2)} after $${minReserve.toFixed(0)} reserve)`;
     }
 
     // Step 5: Check minimum order size

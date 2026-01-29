@@ -129,6 +129,17 @@ const validateNumericConfig = (): void => {
             `Invalid NETWORK_RETRY_LIMIT: ${process.env.NETWORK_RETRY_LIMIT}. Must be between 1 and 10.`
         );
     }
+    
+    // Validate TRADE_MULTIPLIER
+    const tradeMultiplier = parseFloat(process.env.TRADE_MULTIPLIER || '1.0');
+    if (isNaN(tradeMultiplier) || tradeMultiplier < 0) {
+        throw new Error(
+            `Invalid TRADE_MULTIPLIER: ${process.env.TRADE_MULTIPLIER}. Must be >= 0.`
+        );
+    }
+    if (tradeMultiplier > 100) {
+        console.warn(`⚠️  TRADE_MULTIPLIER is very high (${tradeMultiplier}x) - make sure this is intentional!`);
+    }
 };
 
 /**
@@ -374,4 +385,21 @@ export const ENV = {
     // Minimum order sizes
     MIN_ORDER_SIZE_USD: parseFloat(process.env.MIN_ORDER_SIZE_USD || '1.0'),
     MIN_ORDER_SIZE_TOKENS: parseFloat(process.env.MIN_ORDER_SIZE_TOKENS || '1.0'),
+    // Position limits
+    MAX_OPEN_POSITIONS: process.env.MAX_OPEN_POSITIONS
+        ? parseInt(process.env.MAX_OPEN_POSITIONS, 10)
+        : undefined,
+    // Auto-sell stale positions
+    AUTO_SELL_STALE_POSITIONS_DAYS: process.env.AUTO_SELL_STALE_POSITIONS_DAYS
+        ? parseInt(process.env.AUTO_SELL_STALE_POSITIONS_DAYS, 10)
+        : undefined,
+    STALE_POSITION_CHECK_INTERVAL_HOURS: process.env.STALE_POSITION_CHECK_INTERVAL_HOURS
+        ? parseInt(process.env.STALE_POSITION_CHECK_INTERVAL_HOURS, 10)
+        : 24,
+    // Cash reserve (minimum balance to keep)
+    MIN_CASH_RESERVE: parseFloat(process.env.MIN_CASH_RESERVE || '0'),
+    // Trader filtering criteria
+    MIN_TRADER_WIN_RATE: parseFloat(process.env.MIN_TRADER_WIN_RATE || '0'),
+    MIN_TRADER_AVG_POSITION_SIZE: parseFloat(process.env.MIN_TRADER_AVG_POSITION_SIZE || '0'),
+    MIN_MARKET_DAILY_VOLUME: parseFloat(process.env.MIN_MARKET_DAILY_VOLUME || '0'),
 };

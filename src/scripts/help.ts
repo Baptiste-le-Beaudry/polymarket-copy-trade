@@ -44,6 +44,7 @@ console.log('');
 console.log(`${colors.yellow}${colors.bright}🎯 POSITION MANAGEMENT${colors.reset}\n`);
 console.log(`  ${colors.green}npm run manual-sell${colors.reset}       Manually sell a specific position`);
 console.log(`  ${colors.green}npm run sell-large${colors.reset}        Sell large positions (bulk action)`);
+console.log(`  ${colors.green}npm run clean-old${colors.reset}         Clean old or small positions (NEW!)`);
 console.log(`  ${colors.green}npm run close-stale${colors.reset}       Close stale/old positions`);
 console.log(`  ${colors.green}npm run close-resolved${colors.reset}    Close resolved market positions`);
 console.log(`  ${colors.green}npm run redeem-resolved${colors.reset}   Redeem resolved positions for USDC`);

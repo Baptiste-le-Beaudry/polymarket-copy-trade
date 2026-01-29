@@ -1,0 +1,63 @@
+# Modifications du Mode Simulation (DRY_RUN) - Polymarket Copy Trading Bot
+
+## Date des Modifications
+11 janvier 2026
+
+## Auteur
+GitHub Copilot (assisté par l'utilisateur)
+
+## Résumé des Changements
+Le fichier `src/utils/simulationBalance.ts` a été modifié pour rendre le mode simulation (`DRY_RUN=true`) plus réaliste en incluant des estimations de frais typiques des transactions blockchain sur Polygon. Cela permet de simuler les coûts réels (gas, slippage) sans effectuer de vraies transactions.
+
+## Détails Techniques
+
+### Constantes Ajoutées
+- `ESTIMATED_GAS_FEE_USD = 0.03` : Frais de gas estimés par transaction (achat ou vente) sur Polygon, basé sur les coûts moyens (~0.02-0.05 USD).
+- `ESTIMATED_SLIPPAGE_PERCENT = 0.5` : Pourcentage de slippage estimé sur les ordres market (prix effectif légèrement différent).
+
+### Modifications de Classe
+- **Nouvelle propriété** : `totalFeesPaid: number = 0` pour tracker les frais totaux payés pendant la simulation.
+- **Constructeur** : Ajout de logs informant des frais activés.
+
+### Méthodes Modifiées
+
+#### `buy(asset, usdAmount, price)`
+- **Avant** : Déduisait seulement le montant USD de l'achat.
+- **Après** :
+  - Applique le slippage : `effectiveUsdAmount = usdAmount + (usdAmount * 0.5%)`
+  - Ajoute le gas : `totalCost = effectiveUsdAmount + 0.03`
+  - Met à jour `totalFeesPaid` avec slippage + gas.
+  - Logs détaillés incluant les frais.
+
+#### `sell(asset, tokens, price)`
+- **Avant** : Ajoutait seulement les proceeds USD.
+- **Après** :
+  - Déduit le gas des proceeds : `netUsdAmount = usdAmount - 0.03`
+  - Met à jour `totalFeesPaid` avec gas.
+  - Logs détaillés incluant les frais.
+
+#### `printSummary()`
+- Ajout d'une ligne pour afficher les frais totaux payés.
+
+#### `reset()`
+- Reset aussi `totalFeesPaid` à 0.
+
+### Impact sur les Logs
+- Chaque transaction affiche maintenant les frais appliqués (ex. : `+0.005 slippage +0.030 gas`).
+- Le solde virtuel inclut les frais : `(fees paid: $0.04)`.
+- Résumé final montre les frais totaux.
+
+### Avantages
+- Simulation plus précise pour évaluer la rentabilité réelle.
+- Aide à anticiper les coûts avant de passer en mode réel (`DRY_RUN=false`).
+
+### Configuration
+Les frais sont codés en dur, mais peuvent être ajustés en modifiant les constantes en haut du fichier. Pour les rendre configurables via `.env`, ajouter des variables comme `SIMULATION_GAS_FEE` et `SIMULATION_SLIPPAGE_PERCENT`.
+
+### Tests
+- Vérification TypeScript : `npx tsc --noEmit` - Aucune erreur.
+- Recommandé : Tester en lançant le bot en `DRY_RUN=true` et vérifier les logs.
+
+## Note sur la Légalité de Polymarket au Canada
+Comme mentionné par l'utilisateur, Polymarket est interdit au Canada entier (pas seulement l'Ontario) en raison du cadre fédéral sur les dérivés et produits binaires. L'OSC a communiqué publiquement, mais c'est une application du cadre CSA/AMF. Les marchés de prédiction sont classés comme dérivés non enregistrés, donc illégaux pour les investisseurs de détail canadiens. Même avec une IP "neutre", l'accès est bloqué par politique de Polymarket. Recommandation : Consulter un avocat avant toute utilisation réelle.</content>
+<parameter name="filePath">c:\AAForex\Botpolymarket\polymarket-copy-trading-bot\docs\MODIFICATIONS_SIMULATION.md

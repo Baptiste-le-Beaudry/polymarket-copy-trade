@@ -1,0 +1,463 @@
+/**
+ * Generates HTML reports for simulation runs with interactive charts
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import Logger from './logger';
+
+interface BalanceSnapshot {
+    timestamp: Date;
+    balance: number;
+    totalValue: number;
+    positionsCount: number;
+}
+
+interface SimulationStats {
+    startingBalance: number;
+    endingBalance: number;
+    endingTotalValue: number;
+    totalFeesPaid: number;
+    sessionDuration: string;
+    positionsCount: number;
+    balanceHistory: BalanceSnapshot[];
+}
+
+export class ReportGenerator {
+    private reportPath: string;
+
+    constructor() {
+        this.reportPath = path.join(process.cwd(), 'simulation-report.html');
+    }
+
+    /**
+     * Generate HTML report with Chart.js graph
+     */
+    generateReport(stats: SimulationStats): void {
+        try {
+            const html = this.generateHTML(stats);
+            
+            // Overwrite existing report
+            fs.writeFileSync(this.reportPath, html, 'utf-8');
+            
+            Logger.success(`📊 Report generated: ${this.reportPath}`);
+        } catch (error) {
+            Logger.error(`Failed to generate report: ${error}`);
+        }
+    }
+
+    /**
+     * Generate HTML content with embedded Chart.js
+     */
+    private generateHTML(stats: SimulationStats): string {
+        const pnl = stats.endingTotalValue - stats.startingBalance;
+        const pnlPercent = ((stats.endingTotalValue - stats.startingBalance) / stats.startingBalance) * 100;
+        const isProfit = pnl >= 0;
+
+        // Prepare data for Chart.js
+        const timestamps = stats.balanceHistory.map(s => s.timestamp.toISOString());
+        const totalValues = stats.balanceHistory.map(s => s.totalValue.toFixed(2));
+        const cashValues = stats.balanceHistory.map(s => s.balance.toFixed(2));
+        const positionCounts = stats.balanceHistory.map(s => s.positionsCount);
+
+        return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport de Simulation - Polymarket Copy Trading Bot</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-value.positive {
+            color: #28a745;
+        }
+        
+        .stat-value.negative {
+            color: #dc3545;
+        }
+        
+        .chart-container {
+            padding: 40px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 40px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .timestamp {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Rapport de Simulation</h1>
+            <p>Polymarket Copy Trading Bot</p>
+            <p class="timestamp">Généré le ${new Date().toLocaleString('fr-FR')}</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">💰 Balance Initiale</div>
+                <div class="stat-value">$${stats.startingBalance.toFixed(2)}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">💵 Cash Final</div>
+                <div class="stat-value">$${stats.endingBalance.toFixed(2)}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">📊 Valeur Totale</div>
+                <div class="stat-value">$${stats.endingTotalValue.toFixed(2)}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">${isProfit ? '🟢' : '🔴'} P&L</div>
+                <div class="stat-value ${isProfit ? 'positive' : 'negative'}">
+                    ${isProfit ? '+' : ''}$${pnl.toFixed(2)}
+                    <div style="font-size: 0.6em;">(${isProfit ? '+' : ''}${pnlPercent.toFixed(2)}%)</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">💸 Frais Totaux</div>
+                <div class="stat-value">$${stats.totalFeesPaid.toFixed(2)}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">⏱️ Durée</div>
+                <div class="stat-value" style="font-size: 1.5em;">${stats.sessionDuration}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">📦 Positions</div>
+                <div class="stat-value">${stats.positionsCount}</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">📈 Évolution de la Valeur du Portefeuille</h2>
+            <div class="chart-wrapper">
+                <canvas id="valueChart"></canvas>
+            </div>
+            
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">💵 Répartition Cash vs Positions</h2>
+            <div class="chart-wrapper">
+                <canvas id="cashPositionsChart"></canvas>
+            </div>
+            
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">📦 Nombre de Positions</h2>
+            <div class="chart-wrapper" style="height: 300px;">
+                <canvas id="positionsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>🤖 Polymarket Copy Trading Bot</p>
+            <p class="timestamp">Mode Simulation | DRY_RUN = true</p>
+        </div>
+    </div>
+    
+    <script>
+        // Chart colors
+        const colors = {
+            primary: '#667eea',
+            success: '#28a745',
+            danger: '#dc3545',
+            warning: '#ffc107',
+            info: '#17a2b8'
+        };
+        
+        // Parse data
+        const timestamps = ${JSON.stringify(timestamps)};
+        const totalValues = ${JSON.stringify(totalValues)};
+        const cashValues = ${JSON.stringify(cashValues)};
+        const positionCounts = ${JSON.stringify(positionCounts)};
+        
+        // Calculate position values
+        const positionValues = totalValues.map((total, i) => (parseFloat(total) - parseFloat(cashValues[i])).toFixed(2));
+        
+        // Total Value Chart
+        new Chart(document.getElementById('valueChart'), {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Valeur Totale ($)',
+                    data: totalValues,
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primary + '20',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + parseFloat(context.parsed.y).toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            displayFormats: {
+                                minute: 'HH:mm',
+                                hour: 'HH:mm'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Heure'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Valeur ($)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Cash vs Positions Chart
+        new Chart(document.getElementById('cashPositionsChart'), {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: 'Cash ($)',
+                        data: cashValues,
+                        borderColor: colors.success,
+                        backgroundColor: colors.success + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Valeur Positions ($)',
+                        data: positionValues,
+                        borderColor: colors.info,
+                        backgroundColor: colors.info + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + parseFloat(context.parsed.y).toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            displayFormats: {
+                                minute: 'HH:mm',
+                                hour: 'HH:mm'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Heure'
+                        }
+                    },
+                    y: {
+                        stacked: false,
+                        title: {
+                            display: true,
+                            text: 'Valeur ($)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Positions Count Chart
+        new Chart(document.getElementById('positionsChart'), {
+            type: 'bar',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Nombre de Positions',
+                    data: positionCounts,
+                    borderColor: colors.warning,
+                    backgroundColor: colors.warning + '80',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            displayFormats: {
+                                minute: 'HH:mm',
+                                hour: 'HH:mm'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Heure'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Nombre'
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>`;
+    }
+}
+
+export default ReportGenerator;
