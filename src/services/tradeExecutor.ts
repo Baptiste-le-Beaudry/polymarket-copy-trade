@@ -8,10 +8,12 @@ import postOrder from '../utils/postOrder';
 import Logger from '../utils/logger';
 import { getTraderCooldownManager } from '../utils/traderCooldown';
 import { shouldCopyTrade } from '../utils/traderFilter';
+import { getSimulationTracker } from '../utils/simulationBalance';
 
 const USER_ADDRESSES = ENV.USER_ADDRESSES;
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
 const PROXY_WALLET = ENV.PROXY_WALLET;
+const TOO_OLD_TIMESTAMP_HOURS = ENV.TOO_OLD_TIMESTAMP;
 const TRADE_AGGREGATION_ENABLED = ENV.TRADE_AGGREGATION_ENABLED;
 const TRADE_AGGREGATION_WINDOW_SECONDS = ENV.TRADE_AGGREGATION_WINDOW_SECONDS;
 const TRADE_AGGREGATION_MIN_TOTAL_USD = 1.0; // Polymarket minimum
@@ -211,11 +213,39 @@ const getReadyAggregatedTrades = (): AggregatedTrade[] => {
 };
 
 const doTrading = async (clobClient: ClobClient, trades: TradeWithUser[]) => {
+    let skippedSellCount = 0;
     for (const trade of trades) {
-        // Check trader cooldown if enabled
-        if (TRADER_COOLDOWN_ENABLED && traderCooldown) {
-            if (!traderCooldown.shouldCopyTrade(trade.userAddress)) {
-                // Trader in cooldown - skip this trade
+        // Reject trades that are too old (secondary protection — primary is in tradeMonitor)
+        // trade.timestamp is Unix seconds; TOO_OLD_TIMESTAMP_HOURS is in hours
+        const cutoffTimestamp = Math.floor(Date.now() / 1000) - TOO_OLD_TIMESTAMP_HOURS * 3600;
+        if (trade.timestamp < cutoffTimestamp) {
+            const ageHours = ((Date.now() / 1000 - trade.timestamp) / 3600).toFixed(1);
+            Logger.warning(
+                `⛔ Skipping stale trade (${ageHours}h old, limit: ${TOO_OLD_TIMESTAMP_HOURS}h): ${trade.title || trade.slug || trade.asset.substring(0, 12)}...`
+            );
+            const UserActivity = getUserActivityModel(trade.userAddress);
+            await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+            Logger.separator();
+            continue;
+        }
+
+        // Filtre précoce DRY_RUN : ignorer les SELL sans position virtuelle
+        // Évite le flood de logs quand un trader liquide des positions que le bot n'a jamais copiées
+        if (trade.side === 'SELL' && ENV.DRY_RUN) {
+            const simTracker = getSimulationTracker();
+            if (!simTracker.getPosition(trade.asset)) {
+                const UserActivity = getUserActivityModel(trade.userAddress);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                skippedSellCount++;
+                continue;
+            }
+        }
+
+        // Check trader cooldown if enabled (per trader per market) — BUY only
+        // SELL trades always bypass cooldown: if a trader exits a position, we follow immediately
+        if (TRADER_COOLDOWN_ENABLED && traderCooldown && trade.side === 'BUY') {
+            if (!traderCooldown.shouldCopyTrade(trade.userAddress, trade.conditionId)) {
+                // Trader in cooldown for THIS MARKET - skip this BUY
                 const UserActivity = getUserActivityModel(trade.userAddress);
                 await UserActivity.updateOne({ _id: trade._id }, { bot: true });
                 Logger.separator();
@@ -240,6 +270,40 @@ const doTrading = async (clobClient: ClobClient, trades: TradeWithUser[]) => {
             Logger.separator();
             continue;
         }
+
+        // CRITICAL: For BUY trades, verify trader STILL HOLDS this position
+        // This prevents copying historical BUY trades where the trader has already exited
+        if (trade.side === 'BUY') {
+            const traderHasPosition = user_positions.some(
+                (p: UserPositionInterface) =>
+                    p.conditionId === trade.conditionId &&
+                    p.asset === trade.asset &&
+                    p.size > 0
+            );
+
+            if (!traderHasPosition) {
+                Logger.warning(
+                    `⛔ Skipping BUY - Trader no longer holds this position (likely already sold): ${trade.title || trade.slug || trade.asset.substring(0, 12)}...`
+                );
+                Logger.warning(
+                    `   This prevents copying historical trades where trader bought low and already sold high`
+                );
+                const UserActivity = getUserActivityModel(trade.userAddress);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                Logger.separator();
+                continue;
+            }
+
+            // Log trader's current position size for transparency
+            const traderPos = user_positions.find(
+                (p: UserPositionInterface) => p.conditionId === trade.conditionId && p.asset === trade.asset
+            );
+            if (traderPos) {
+                Logger.info(
+                    `✅ Verified: Trader holds ${traderPos.size.toFixed(2)} tokens @ $${traderPos.avgPrice.toFixed(4)} avg (current value: $${(traderPos.currentValue || 0).toFixed(2)})`
+                );
+            }
+        }
         
         // Check if trader and market meet filtering criteria
         if (ENV.MIN_TRADER_WIN_RATE > 0 || ENV.MIN_TRADER_AVG_POSITION_SIZE > 0) {
@@ -260,9 +324,20 @@ const doTrading = async (clobClient: ClobClient, trades: TradeWithUser[]) => {
             }
         }
 
+        // Log copy delay: how long since the trader made this trade
+        const nowSec = Math.floor(Date.now() / 1000);
+        const delaySec = nowSec - trade.timestamp;
+        const delayStr = delaySec < 60
+            ? `${delaySec}s`
+            : `${Math.floor(delaySec / 60)}m${(delaySec % 60).toString().padStart(2, '0')}s`;
+        const delayEmoji = delaySec < 30 ? '⚡' : delaySec < 90 ? '⏱' : '🐌';
+        const traderTime = new Date(trade.timestamp * 1000).toLocaleTimeString();
+        Logger.info(`${delayEmoji} Copy delay: ${delayStr} (trader executed at ${traderTime})`);
+
         // Mark trade as being processed immediately to prevent duplicate processing
+        // Save executedAt (Unix ms) for quality report analysis
         const UserActivity = getUserActivityModel(trade.userAddress);
-        await UserActivity.updateOne({ _id: trade._id }, { $set: { botExcutedTime: 1 } });
+        await UserActivity.updateOne({ _id: trade._id }, { $set: { botExcutedTime: 1, executedAt: Date.now() } });
 
         Logger.trade(trade.userAddress, trade.side || 'UNKNOWN', {
             asset: trade.asset,
@@ -307,7 +382,35 @@ const doTrading = async (clobClient: ClobClient, trades: TradeWithUser[]) => {
             trade.userAddress
         );
 
+        // 1s après l'achat du trader : affiche le prix actuel du marché
+        if (trade.side === 'BUY') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            try {
+                const bookData = await fetchData(
+                    `https://clob.polymarket.com/book?token_id=${trade.asset}`
+                ) as { bids: Array<{ price: string }>; asks: Array<{ price: string }> };
+                if (bookData?.bids?.[0] && bookData?.asks?.[0]) {
+                    const bid = parseFloat(bookData.bids[0].price);
+                    const ask = parseFloat(bookData.asks[0].price);
+                    const mid = (bid + ask) / 2;
+                    const diff = mid - trade.price;
+                    const pct = ((diff / trade.price) * 100).toFixed(1);
+                    const arrow = diff >= 0 ? '📈' : '📉';
+                    const sign = diff >= 0 ? '+' : '';
+                    Logger.info(
+                        `${arrow} Prix 1s après achat: bid $${bid.toFixed(4)} / ask $${ask.toFixed(4)} (mid $${mid.toFixed(4)}, ${sign}${pct}% vs trader $${trade.price.toFixed(4)})`
+                    );
+                }
+            } catch {
+                // Non-bloquant — info supplémentaire seulement
+            }
+        }
+
         Logger.separator();
+    }
+
+    if (skippedSellCount > 0) {
+        Logger.info(`⏭ ${skippedSellCount} SELL ignoré(s) — pas de position virtuelle (trader liquide des positions non copiées)`);
     }
 };
 
@@ -504,7 +607,7 @@ const tradeExecutor = async (clobClient: ClobClient) => {
 
             // Update waiting message
             if (trades.length === 0 && readyAggregations.length === 0) {
-                if (Date.now() - lastCheck > 300) {
+                if (Date.now() - lastCheck > 2000) {
                     const bufferedCount = tradeAggregationBuffer.size;
                     if (bufferedCount > 0) {
                         Logger.waiting(
@@ -527,8 +630,8 @@ const tradeExecutor = async (clobClient: ClobClient) => {
                 await doTrading(clobClient, trades);
                 lastCheck = Date.now();
             } else {
-                // Update waiting message every 300ms for smooth animation
-                if (Date.now() - lastCheck > 300) {
+                // Update waiting message every 2s (moins de bruit dans le terminal)
+                if (Date.now() - lastCheck > 2000) {
                     Logger.waiting(USER_ADDRESSES.length);
                     lastCheck = Date.now();
                 }
@@ -536,7 +639,7 @@ const tradeExecutor = async (clobClient: ClobClient) => {
         }
 
         if (!isRunning) break;
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     Logger.info('Trade executor stopped');

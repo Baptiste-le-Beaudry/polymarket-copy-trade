@@ -9,10 +9,44 @@ import Logger from './logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import ReportGenerator from './reportGenerator';
+import { estimateGasFeeUSD, getCachedGasFeeUSD } from './gasFeeEstimator';
+import fetchData from './fetchData';
 
-// Estimated fees for realistic simulation
-const ESTIMATED_GAS_FEE_USD = 0.03; // Average gas fee per transaction on Polygon (~$0.02-0.05)
+const SIMULATION_STATE_FILE = path.join(process.cwd(), 'data', 'simulation_state.json');
+
+interface SimulationState {
+    balance: number;
+    startingBalance: number;
+    totalFeesPaid: number;
+    positions: Array<{
+        asset: string;
+        size: number;
+        avgPrice: number;
+        openedAt: number;
+        market?: string;
+    }>;
+    lastUpdated: number;
+}
+
+// Fallback static fees (used when REAL_GAS_FEES=false or API unavailable)
+const STATIC_GAS_FEE_USD = 0.03; // Average gas fee per transaction on Polygon (~$0.02-0.05)
 const ESTIMATED_SLIPPAGE_PERCENT = 0.5; // 0.5% slippage on market orders
+
+// Resolve gas fee: real from API if enabled, static otherwise
+async function getGasFeeUSD(): Promise<number> {
+    if (ENV.REAL_GAS_FEES) {
+        return estimateGasFeeUSD();
+    }
+    return STATIC_GAS_FEE_USD;
+}
+
+// Synchronous version for use in hot paths (uses cached value)
+function getGasFeeUSDSync(): number {
+    if (ENV.REAL_GAS_FEES) {
+        return getCachedGasFeeUSD();
+    }
+    return STATIC_GAS_FEE_USD;
+}
 
 interface BalanceSnapshot {
     timestamp: Date;
@@ -36,20 +70,97 @@ class SimulationBalanceTracker {
     private balanceHistory: BalanceSnapshot[];
     private sessionStartTime: Date;
     private totalFeesPaid: number = 0;
+    // Mark-to-market: current market prices fetched periodically from Polymarket
+    private markToMarketPrices: Map<string, number> = new Map();
+    // Last known good prices — persists across failed mark-to-market fetches
+    // When a fetch fails, we use this instead of falling back to entry price ($0.99)
+    private lastKnownPrices: Map<string, number> = new Map();
+    // Assets restored from a previous session — BUY is blocked on these to avoid re-buying
+    private restoredAssets: Set<string> = new Set();
 
     constructor(startingBalance: number) {
         this.startingBalance = startingBalance;
-        this.balance = startingBalance;
         this.positions = new Map();
         this.balanceHistory = [];
         this.sessionStartTime = new Date();
         this.totalFeesPaid = 0;
-        
+
+        // Try to restore persisted state from previous session
+        const savedState = this.loadState();
+        if (savedState) {
+            this.balance = savedState.balance;
+            this.totalFeesPaid = savedState.totalFeesPaid;
+            for (const pos of savedState.positions) {
+                this.positions.set(pos.asset, {
+                    size: pos.size,
+                    avgPrice: pos.avgPrice,
+                    openedAt: pos.openedAt,
+                    market: pos.market,
+                });
+                // Mark as restored so BUY logic can skip re-buying them
+                this.restoredAssets.add(pos.asset);
+            }
+            Logger.info(
+                `💾 Simulation state restored: $${this.balance.toFixed(2)} balance, ` +
+                `${this.positions.size} position(s) reloaded from disk (BUY blocked on restored positions)`
+            );
+        } else {
+            this.balance = startingBalance;
+            Logger.info(`💰 Simulation mode: Starting with $${startingBalance.toFixed(2)} virtual balance`);
+        }
+
+        Logger.info(`💸 Fees enabled: Gas fee ${ENV.REAL_GAS_FEES ? '(real Polygon)' : `$${STATIC_GAS_FEE_USD}`}/tx, Slippage ${ESTIMATED_SLIPPAGE_PERCENT}%`);
+
         // Record initial balance
         this.recordSnapshot();
-        
-        Logger.info(`💰 Simulation mode: Starting with $${startingBalance.toFixed(2)} virtual balance`);
-        Logger.info(`💸 Fees enabled: Gas fee $${ESTIMATED_GAS_FEE_USD}/tx, Slippage ${ESTIMATED_SLIPPAGE_PERCENT}%`);
+    }
+
+    /**
+     * Load simulation state from disk (persisted across restarts)
+     */
+    private loadState(): SimulationState | null {
+        try {
+            if (!fs.existsSync(SIMULATION_STATE_FILE)) return null;
+            const data = fs.readFileSync(SIMULATION_STATE_FILE, 'utf-8');
+            const state: SimulationState = JSON.parse(data);
+            if (
+                typeof state.balance === 'number' &&
+                Array.isArray(state.positions)
+            ) {
+                return state;
+            }
+            return null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Save simulation state to disk so positions survive bot restarts
+     */
+    private saveState(): void {
+        try {
+            const dataDir = path.join(process.cwd(), 'data');
+            if (!fs.existsSync(dataDir)) {
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
+            const state: SimulationState = {
+                balance: this.balance,
+                startingBalance: this.startingBalance,
+                totalFeesPaid: this.totalFeesPaid,
+                positions: Array.from(this.positions.entries()).map(([asset, pos]) => ({
+                    asset,
+                    size: pos.size,
+                    avgPrice: pos.avgPrice,
+                    openedAt: pos.openedAt,
+                    market: pos.market,
+                })),
+                lastUpdated: Date.now(),
+            };
+            fs.writeFileSync(SIMULATION_STATE_FILE, JSON.stringify(state, null, 2), 'utf-8');
+        } catch {
+            // Silently fail — persistence is best-effort
+        }
     }
 
     getBalance(): number {
@@ -58,6 +169,14 @@ class SimulationBalanceTracker {
 
     getPosition(asset: string): SimulationPosition | undefined {
         return this.positions.get(asset);
+    }
+
+    /**
+     * Returns true if this asset was restored from a previous session.
+     * Used to block re-buying positions that already exist in the simulation.
+     */
+    isRestoredPosition(asset: string): boolean {
+        return this.restoredAssets.has(asset);
     }
 
     getAllPositions(): Array<{ asset: string; size: number; avgPrice: number; openedAt: number; market?: string }> {
@@ -82,19 +201,82 @@ class SimulationBalanceTracker {
     }
 
     /**
-     * Record a snapshot of the current balance and portfolio value
+     * Fetch current market prices for all open positions (mark-to-market)
+     * Uses Polymarket CLOB book API (midpoints endpoint is broken — returns HTTP 400)
+     * Fetches each asset individually and computes midpoint = (best_bid + best_ask) / 2
      */
-    private recordSnapshot(): void {
-        const currentPrices = new Map<string, number>();
-        // Use average prices for positions (in production, you'd fetch real prices)
-        for (const [asset, position] of this.positions.entries()) {
-            currentPrices.set(asset, position.avgPrice);
+    async updateMarkToMarket(): Promise<void> {
+        const assets = Array.from(this.positions.keys());
+        if (assets.length === 0) return;
+
+        let updated = 0;
+        let failed = 0;
+
+        // Fetch order books in small batches to avoid rate-limiting (5 at a time, 150ms delay)
+        const BATCH_SIZE = 5;
+        const BATCH_DELAY_MS = 150;
+
+        for (let i = 0; i < assets.length; i += BATCH_SIZE) {
+            const batch = assets.slice(i, i + BATCH_SIZE);
+
+            const batchResults = await Promise.allSettled(
+                batch.map(async (asset) => {
+                    const data = await fetchData(
+                        `https://clob.polymarket.com/book?token_id=${asset}`
+                    ) as { bids: Array<{ price: string }>; asks: Array<{ price: string }> };
+
+                    if (data?.bids?.[0] && data?.asks?.[0]) {
+                        const bid = parseFloat(data.bids[0].price);
+                        const ask = parseFloat(data.asks[0].price);
+                        if (bid > 0 && ask > 0 && isFinite(bid) && isFinite(ask)) {
+                            return { asset, midpoint: (bid + ask) / 2 };
+                        }
+                    }
+                    throw new Error('No valid bid/ask');
+                })
+            );
+
+            for (const result of batchResults) {
+                if (result.status === 'fulfilled') {
+                    this.markToMarketPrices.set(result.value.asset, result.value.midpoint);
+                    this.lastKnownPrices.set(result.value.asset, result.value.midpoint);
+                    updated++;
+                } else {
+                    failed++;
+                    // Keep lastKnownPrices unchanged — will be used as fallback
+                }
+            }
+
+            // Wait between batches to avoid rate-limiting
+            if (i + BATCH_SIZE < assets.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
         }
 
+        const posValue = this.getPositionsValue();
+        const total = this.balance + posValue;
+        const pnl = total - this.startingBalance;
+        const pnlPct = (pnl / this.startingBalance) * 100;
+
+        Logger.info(
+            `📡 Mark-to-market: ${updated} positions updated${failed > 0 ? `, ${failed} failed` : ''} | ` +
+            `Portfolio: $${this.balance.toFixed(2)} cash + $${posValue.toFixed(2)} positions = ` +
+            `$${total.toFixed(2)} total (${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}, ${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%)`
+        );
+
+        // Record updated snapshot
+        this.recordSnapshot();
+    }
+
+    /**
+     * Record a snapshot of the current balance and portfolio value
+     */
+    recordSnapshot(): void {
+        // Use mark-to-market prices when available, entry price as fallback
         const snapshot: BalanceSnapshot = {
             timestamp: new Date(),
             balance: this.balance,
-            totalValue: this.getTotalValue(currentPrices),
+            totalValue: this.balance + this.getPositionsValue(),
             positionsCount: this.positions.size,
             cashBalance: this.balance,
         };
@@ -105,7 +287,9 @@ class SimulationBalanceTracker {
     /**
      * Simulate buying tokens (with gas fees and slippage)
      */
-    buy(asset: string, usdAmount: number, price: number): void {
+    async buy(asset: string, usdAmount: number, price: number): Promise<void> {
+        // Simule un délai de 1 seconde pour refléter la latence réelle
+        await new Promise(resolve => setTimeout(resolve, 1000));
         // Validate price
         if (!price || price <= 0 || !isFinite(price)) {
             throw new Error(`Invalid price for buy: ${price}`);
@@ -114,19 +298,20 @@ class SimulationBalanceTracker {
             throw new Error(`Invalid USD amount for buy: ${usdAmount}`);
         }
         
-        // Calculate slippage and fees
+        // Calculate slippage and fees (use real gas fee if enabled)
+        const gasFeeUSD = await getGasFeeUSD();
         const slippageCost = usdAmount * (ESTIMATED_SLIPPAGE_PERCENT / 100);
         const effectiveUsdAmount = usdAmount + slippageCost; // Slippage increases cost
-        const totalCost = effectiveUsdAmount + ESTIMATED_GAS_FEE_USD; // Add gas fee
-        
+        const totalCost = effectiveUsdAmount + gasFeeUSD; // Add gas fee
+
         // Check MIN_CASH_RESERVE - don't go below the reserve
         const minReserve = ENV.MIN_CASH_RESERVE || 0;
         const availableAfterReserve = Math.max(0, this.balance - minReserve);
-        
+
         if (totalCost > availableAfterReserve) {
             throw new Error(`Insufficient virtual balance: $${this.balance.toFixed(2)} - $${minReserve.toFixed(0)} reserve = $${availableAfterReserve.toFixed(2)} available, need $${totalCost.toFixed(2)}`);
         }
-        
+
         if (totalCost > this.balance) {
             throw new Error(`Insufficient virtual balance: $${this.balance.toFixed(2)} < $${totalCost.toFixed(2)} (including fees)`);
         }
@@ -141,27 +326,30 @@ class SimulationBalanceTracker {
             existing.size = totalTokens;
             existing.avgPrice = totalValue / totalTokens;
         } else {
-            this.positions.set(asset, { 
-                size: tokens, 
+            this.positions.set(asset, {
+                size: tokens,
                 avgPrice: price,
                 openedAt: Date.now()
             });
         }
 
         this.balance -= totalCost;
-        this.totalFeesPaid += slippageCost + ESTIMATED_GAS_FEE_USD;
-        
-        Logger.success(`✓ [VIRTUAL] Bought ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)} +${slippageCost.toFixed(3)} slippage +${ESTIMATED_GAS_FEE_USD.toFixed(3)} gas`);
+        this.totalFeesPaid += slippageCost + gasFeeUSD;
+
+        Logger.success(`✓ [VIRTUAL] Bought ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)} +${slippageCost.toFixed(3)} slippage +${gasFeeUSD.toFixed(4)} gas`);
         Logger.info(`💰 Virtual balance: $${this.balance.toFixed(2)} (fees paid: $${this.totalFeesPaid.toFixed(2)})`);
-        
+
         // Record snapshot after trade
         this.recordSnapshot();
+        this.saveState();
     }
 
     /**
      * Simulate selling tokens (with gas fees)
      */
-    sell(asset: string, tokens: number, price: number): void {
+    async sell(asset: string, tokens: number, price: number): Promise<void> {
+        // Simule un délai de 1 seconde pour refléter la latence réelle
+        await new Promise(resolve => setTimeout(resolve, 1000));
         // Validate inputs
         if (!price || price <= 0 || !isFinite(price)) {
             throw new Error(`Invalid price for sell: ${price}`);
@@ -179,22 +367,182 @@ class SimulationBalanceTracker {
         }
 
         const usdAmount = tokens * price;
-        const netUsdAmount = usdAmount - ESTIMATED_GAS_FEE_USD; // Deduct gas fee from proceeds
-        
+        const gasFeeUSD = await getGasFeeUSD();
+        const netUsdAmount = usdAmount - gasFeeUSD; // Deduct gas fee from proceeds
+
         this.balance += netUsdAmount;
-        this.totalFeesPaid += ESTIMATED_GAS_FEE_USD;
+        this.totalFeesPaid += gasFeeUSD;
 
         position.size -= tokens;
         if (position.size < 0.01) {
             // Close position if less than 0.01 tokens remaining
             this.positions.delete(asset);
+            // No longer restored — allow re-buying if traders enter again
+            this.restoredAssets.delete(asset);
         }
 
-        Logger.success(`✓ [VIRTUAL] Sold ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)} -${ESTIMATED_GAS_FEE_USD.toFixed(3)} gas`);
+        Logger.success(`✓ [VIRTUAL] Sold ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)} -${gasFeeUSD.toFixed(4)} gas`);
         Logger.info(`💰 Virtual balance: $${this.balance.toFixed(2)} (fees paid: $${this.totalFeesPaid.toFixed(2)})`);
-        
+
         // Record snapshot after trade
         this.recordSnapshot();
+        this.saveState();
+    }
+
+    /**
+     * Simulate buying tokens using order book simulation results
+     * This method uses the realistic execution data from order book simulator
+     */
+    async buyWithOrderBook(
+        asset: string,
+        usdAmount: number,
+        traderPrice: number,
+        orderBookResult: {
+            totalCost: number;
+            avgPrice: number;
+            tokensFilled: number;
+            fullyFilled: boolean;
+            levelsUsed: Array<{ price: number; size: number }>;
+        }
+    ): Promise<void> {
+        // Simule un délai de 1 seconde pour refléter la latence réelle
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Validate
+        if (!orderBookResult.avgPrice || orderBookResult.avgPrice <= 0) {
+            throw new Error(`Invalid avgPrice from order book: ${orderBookResult.avgPrice}`);
+        }
+        if (!orderBookResult.tokensFilled || orderBookResult.tokensFilled <= 0) {
+            throw new Error(`Invalid tokensFilled from order book: ${orderBookResult.tokensFilled}`);
+        }
+
+        // Calculate realistic costs (use real gas fee if enabled)
+        const gasFeeUSD = await getGasFeeUSD();
+        const actualUsdAmount = orderBookResult.tokensFilled * orderBookResult.avgPrice;
+        const slippageCost = actualUsdAmount * (ESTIMATED_SLIPPAGE_PERCENT / 100);
+        const totalCost = actualUsdAmount + slippageCost + gasFeeUSD;
+
+        // Check MIN_CASH_RESERVE
+        const minReserve = ENV.MIN_CASH_RESERVE || 0;
+        const availableAfterReserve = Math.max(0, this.balance - minReserve);
+
+        if (totalCost > availableAfterReserve) {
+            throw new Error(`Insufficient virtual balance: $${this.balance.toFixed(2)} - $${minReserve.toFixed(0)} reserve = $${availableAfterReserve.toFixed(2)} available, need $${totalCost.toFixed(2)}`);
+        }
+
+        if (totalCost > this.balance) {
+            throw new Error(`Insufficient virtual balance: $${this.balance.toFixed(2)} < $${totalCost.toFixed(2)} (including fees)`);
+        }
+
+        const tokens = orderBookResult.tokensFilled;
+        const avgPrice = orderBookResult.avgPrice;
+        const existing = this.positions.get(asset);
+
+        if (existing) {
+            // Update average price but keep original opened date
+            const totalTokens = existing.size + tokens;
+            const totalValue = existing.size * existing.avgPrice + tokens * avgPrice;
+            existing.size = totalTokens;
+            existing.avgPrice = totalValue / totalTokens;
+        } else {
+            this.positions.set(asset, {
+                size: tokens,
+                avgPrice: avgPrice,
+                openedAt: Date.now()
+            });
+        }
+
+        this.balance -= totalCost;
+        this.totalFeesPaid += slippageCost + gasFeeUSD;
+
+        const slippageVsTrader = ((avgPrice - traderPrice) / traderPrice) * 100;
+
+        Logger.success(
+            `✓ [VIRTUAL] Bought ${tokens.toFixed(2)} tokens @ $${avgPrice.toFixed(4)} avg ` +
+            `(trader: $${traderPrice.toFixed(4)}, slippage: ${slippageVsTrader >= 0 ? '+' : ''}${slippageVsTrader.toFixed(2)}%)`
+        );
+        Logger.info(
+            `  💰 Cost: $${actualUsdAmount.toFixed(2)} + $${slippageCost.toFixed(3)} slippage + $${gasFeeUSD.toFixed(4)} gas = $${totalCost.toFixed(2)}`
+        );
+        Logger.info(`💵 Virtual balance: $${this.balance.toFixed(2)} (fees paid: $${this.totalFeesPaid.toFixed(2)})`);
+
+        if (!orderBookResult.fullyFilled) {
+            Logger.warning(`⚠️ Partial fill: ${orderBookResult.levelsUsed.length} order book levels used`);
+        }
+
+        // Record snapshot after trade
+        this.recordSnapshot();
+        this.saveState();
+    }
+
+    /**
+     * Simulate selling tokens using order book simulation results
+     * This method uses the realistic execution data from order book simulator
+     */
+    async sellWithOrderBook(
+        asset: string,
+        tokens: number,
+        traderPrice: number,
+        orderBookResult: {
+            totalCost: number;
+            avgPrice: number;
+            tokensFilled: number;
+            fullyFilled: boolean;
+            levelsUsed: Array<{ price: number; size: number }>;
+        }
+    ): Promise<void> {
+        // Simule un délai de 1 seconde pour refléter la latence réelle
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Validate
+        if (!orderBookResult.avgPrice || orderBookResult.avgPrice <= 0) {
+            throw new Error(`Invalid avgPrice from order book: ${orderBookResult.avgPrice}`);
+        }
+        if (!orderBookResult.tokensFilled || orderBookResult.tokensFilled <= 0) {
+            throw new Error(`Invalid tokensFilled from order book: ${orderBookResult.tokensFilled}`);
+        }
+
+        const position = this.positions.get(asset);
+        if (!position) {
+            throw new Error(`No position found for asset ${asset}`);
+        }
+        if (orderBookResult.tokensFilled > position.size) {
+            throw new Error(`Insufficient tokens: ${position.size} < ${orderBookResult.tokensFilled}`);
+        }
+
+        const tokensSold = orderBookResult.tokensFilled;
+        const avgPrice = orderBookResult.avgPrice;
+        const usdAmount = tokensSold * avgPrice;
+        const gasFeeUSD = await getGasFeeUSD();
+        const netUsdAmount = usdAmount - gasFeeUSD;
+
+        this.balance += netUsdAmount;
+        this.totalFeesPaid += gasFeeUSD;
+
+        position.size -= tokensSold;
+        if (position.size < 0.01) {
+            // Close position if less than 0.01 tokens remaining
+            this.positions.delete(asset);
+            // No longer restored — allow re-buying if traders enter again
+            this.restoredAssets.delete(asset);
+        }
+
+        const slippageVsTrader = ((avgPrice - traderPrice) / traderPrice) * 100;
+
+        Logger.success(
+            `✓ [VIRTUAL] Sold ${tokensSold.toFixed(2)} tokens @ $${avgPrice.toFixed(4)} avg ` +
+            `(trader: $${traderPrice.toFixed(4)}, slippage: ${slippageVsTrader >= 0 ? '+' : ''}${slippageVsTrader.toFixed(2)}%)`
+        );
+        Logger.info(`  💰 Proceeds: $${usdAmount.toFixed(2)} - $${gasFeeUSD.toFixed(4)} gas = $${netUsdAmount.toFixed(2)}`);
+        Logger.info(`💵 Virtual balance: $${this.balance.toFixed(2)} (fees paid: $${this.totalFeesPaid.toFixed(2)})`);
+
+        if (!orderBookResult.fullyFilled) {
+            Logger.warning(`⚠️ Partial fill: ${orderBookResult.levelsUsed.length} order book levels used`);
+        }
+
+        // Record snapshot after trade
+        this.recordSnapshot();
+        this.saveState();
     }
 
     /**
@@ -231,14 +579,25 @@ class SimulationBalanceTracker {
     }
 
     /**
-     * Get current positions value
+     * Get current positions value using mark-to-market prices when available,
+     * falling back to entry price (avgPrice) if no real price has been fetched yet
      */
     getPositionsValue(): number {
         let positionsValue = 0;
         for (const [asset, position] of this.positions.entries()) {
-            positionsValue += position.size * position.avgPrice;
+            const currentPrice = this.markToMarketPrices.get(asset) ?? this.lastKnownPrices.get(asset) ?? position.avgPrice;
+            positionsValue += position.size * currentPrice;
         }
         return positionsValue;
+    }
+
+    /**
+     * Get mark-to-market price for a specific asset (or entry price as fallback)
+     */
+    getCurrentPrice(asset: string): number {
+        const position = this.positions.get(asset);
+        if (!position) return 0;
+        return this.markToMarketPrices.get(asset) ?? this.lastKnownPrices.get(asset) ?? position.avgPrice;
     }
 
     /**
@@ -258,10 +617,40 @@ class SimulationBalanceTracker {
         Logger.info(`💸 Total Fees Paid:  $${this.totalFeesPaid.toFixed(2)} (gas + slippage)`);
 
         if (this.positions.size > 0) {
-            Logger.info('\n📦 Virtual Positions:');
+            const hasMtM = this.markToMarketPrices.size > 0;
+            Logger.info(`\n📦 Virtual Positions (${hasMtM ? 'mark-to-market' : 'entry price'}):`);
+
+            let totalEntryValue = 0;
+            let totalCurrentValue = 0;
+
             for (const [asset, position] of this.positions.entries()) {
-                const value = position.size * position.avgPrice;
-                Logger.info(`   • ${asset.substring(0, 12)}... | ${position.size.toFixed(2)} tokens @ $${position.avgPrice.toFixed(4)} = $${value.toFixed(2)}`);
+                const entryValue = position.size * position.avgPrice;
+                const currentPrice = this.markToMarketPrices.get(asset) ?? this.lastKnownPrices.get(asset) ?? position.avgPrice;
+                const currentValue = position.size * currentPrice;
+                const pnl = currentValue - entryValue;
+                const pnlPct = position.avgPrice > 0 ? ((currentPrice - position.avgPrice) / position.avgPrice) * 100 : 0;
+                totalEntryValue += entryValue;
+                totalCurrentValue += currentValue;
+
+                const pnlStr = hasMtM
+                    ? ` | P&L: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%) @ $${currentPrice.toFixed(4)}`
+                    : '';
+                const market = position.market ? position.market.substring(0, 35) : asset.substring(0, 12) + '...';
+                Logger.info(
+                    `   • ${market} | ${position.size.toFixed(2)} tokens @ $${position.avgPrice.toFixed(4)} entry = $${entryValue.toFixed(2)}${pnlStr}`
+                );
+            }
+
+            if (hasMtM) {
+                const totalPnl = totalCurrentValue - totalEntryValue;
+                const totalPnlPct = totalEntryValue > 0 ? (totalPnl / totalEntryValue) * 100 : 0;
+                Logger.info(
+                    `   ────────────────────────────────────────────────────────`
+                );
+                Logger.info(
+                    `   📊 Positions total: $${totalEntryValue.toFixed(2)} invested → $${totalCurrentValue.toFixed(2)} current | ` +
+                    `P&L: ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)} (${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(1)}%)`
+                );
             }
         }
 
@@ -291,10 +680,21 @@ class SimulationBalanceTracker {
     reset(): void {
         this.balance = this.startingBalance;
         this.positions.clear();
+        this.restoredAssets.clear();
         this.balanceHistory = [];
         this.sessionStartTime = new Date();
         this.totalFeesPaid = 0;
         this.recordSnapshot();
+
+        // Delete persisted state so next restart starts fresh
+        try {
+            if (fs.existsSync(SIMULATION_STATE_FILE)) {
+                fs.unlinkSync(SIMULATION_STATE_FILE);
+            }
+        } catch {
+            // Silently fail
+        }
+
         Logger.info(`🔄 Virtual balance reset to $${this.startingBalance.toFixed(2)}`);
     }
 
@@ -327,13 +727,14 @@ class SimulationBalanceTracker {
         Logger.info(`💼 Closing ${positionsToClose.length} positions worth $${totalPositionsValue.toFixed(2)} total`);
         Logger.separator();
 
+        const gasFeePerTx = getGasFeeUSDSync();
         for (const [asset, position] of positionsToClose) {
             const usdAmount = position.size * position.avgPrice;
-            const netUsdAmount = usdAmount - ESTIMATED_GAS_FEE_USD;
-            
+            const netUsdAmount = usdAmount - gasFeePerTx;
+
             totalProceeds += netUsdAmount;
             this.balance += netUsdAmount;
-            this.totalFeesPaid += ESTIMATED_GAS_FEE_USD;
+            this.totalFeesPaid += gasFeePerTx;
 
             const logLine = `✓ Closed ${asset.substring(0, 12)}... | ` +
                 `${position.size.toFixed(2)} tokens @ $${position.avgPrice.toFixed(4)} = ` +
@@ -358,7 +759,7 @@ class SimulationBalanceTracker {
         Logger.separator();
         Logger.success(`💰 All positions closed | Total proceeds: $${totalProceeds.toFixed(2)}`);
         Logger.success(`💵 Final balance: $${this.balance.toFixed(2)}`);
-        Logger.success(`📈 Portfolio liquidated at shutdown: +$${(totalProceeds - (totalPositionsValue - (positionsToClose.length * ESTIMATED_GAS_FEE_USD))).toFixed(2)} net after fees`);
+        Logger.success(`📈 Portfolio liquidated at shutdown: +$${(totalProceeds - (totalPositionsValue - (positionsToClose.length * gasFeePerTx))).toFixed(2)} net after fees`);
         Logger.separator();
 
         return this.balance;

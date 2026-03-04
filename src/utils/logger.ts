@@ -4,14 +4,32 @@ import * as path from 'path';
 
 class Logger {
     private static logsDir = path.join(process.cwd(), 'logs');
-    private static currentLogFile = '';
+    private static readonly LOG_FILE = path.join(process.cwd(), 'logs', 'bot.log');
     // When true, only allow logs that match the allowedPattern to be printed
     private static filterOnlyOrderLog = process.env.ONLY_SHOW_ORDER_LOG === 'true';
     private static allowedPattern = /signedOrderSignatureType/;
 
-    private static getLogFileName(): string {
-        const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-        return path.join(this.logsDir, `bot-${date}.log`);
+    // Rolling log settings
+    private static readonly MAX_LOG_LINES = 5000;      // keep last 5000 lines
+    private static readonly TRIM_INTERVAL = 250;       // check size every 250 writes
+    private static writeCount = 0;
+
+    /**
+     * Call once at bot startup: clears the log file so each session starts fresh.
+     */
+    static initLogFile(): void {
+        try {
+            this.ensureLogsDir();
+            const now = new Date().toISOString();
+            fs.writeFileSync(
+                this.LOG_FILE,
+                `[${now}] ========== BOT STARTED ==========\n`,
+                'utf8'
+            );
+            this.writeCount = 0;
+        } catch {
+            // Silently fail
+        }
     }
 
     private static ensureLogsDir(): void {
@@ -20,14 +38,37 @@ class Logger {
         }
     }
 
+    /**
+     * Trim the log file to the last MAX_LOG_LINES lines.
+     * Called every TRIM_INTERVAL writes to avoid reading the file too often.
+     */
+    private static trimLogFile(): void {
+        try {
+            if (!fs.existsSync(this.LOG_FILE)) return;
+            const content = fs.readFileSync(this.LOG_FILE, 'utf8');
+            const lines = content.split('\n');
+            if (lines.length > this.MAX_LOG_LINES + 100) {
+                // Keep last MAX_LOG_LINES lines
+                const trimmed = lines.slice(-this.MAX_LOG_LINES);
+                fs.writeFileSync(this.LOG_FILE, trimmed.join('\n'), 'utf8');
+            }
+        } catch {
+            // Silently fail
+        }
+    }
+
     private static writeToFile(message: string): void {
         try {
             this.ensureLogsDir();
-            const logFile = this.getLogFileName();
             const timestamp = new Date().toISOString();
             const logEntry = `[${timestamp}] ${message}\n`;
-            fs.appendFileSync(logFile, logEntry, 'utf8');
-        } catch (error) {
+            fs.appendFileSync(this.LOG_FILE, logEntry, 'utf8');
+
+            this.writeCount++;
+            if (this.writeCount % this.TRIM_INTERVAL === 0) {
+                this.trimLogFile();
+            }
+        } catch {
             // Silently fail to avoid infinite loops
         }
     }

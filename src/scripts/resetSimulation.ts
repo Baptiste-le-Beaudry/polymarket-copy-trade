@@ -4,8 +4,10 @@
  */
 
 import { resetSimulationTracker, getSimulationTracker } from '../utils/simulationBalance';
-import { getPositionTracker } from '../utils/positionTracker';
+import { resetPositionTracker } from '../utils/positionTracker';
 import Logger from '../utils/logger';
+import * as fs from 'fs';
+import * as path from 'path';
 
 async function resetSimulation(): Promise<void> {
     try {
@@ -17,16 +19,39 @@ async function resetSimulation(): Promise<void> {
         Logger.info('💰 Resetting virtual balance and positions...');
         resetSimulationTracker();
         
-        // Reset position tracker if it exists
-        try {
-            const positionTracker = getPositionTracker();
-            // Position tracker doesn't have a reset method, that's ok
-            Logger.info('📊 Position tracker will be reset on next use');
-        } catch (error) {
-            // Position tracker might not exist, that's ok
-            Logger.info('📊 Position tracker not found');
+        // Reset position tracker and trade history
+        Logger.info('📊 Clearing position tracker and trade history...');
+        resetPositionTracker();
+        
+        // Also clear the files directly to be sure
+        const dataDir = path.join(process.cwd(), 'data');
+        const positionsFile = path.join(dataDir, 'positions.json');
+        const historyFile = path.join(dataDir, 'trade_history.json');
+        
+        if (fs.existsSync(positionsFile)) {
+            fs.writeFileSync(positionsFile, JSON.stringify({ positions: {}, lastUpdated: Date.now() }, null, 2));
+            Logger.info('🗑️ Cleared positions.json');
         }
         
+        if (fs.existsSync(historyFile)) {
+            fs.writeFileSync(historyFile, JSON.stringify({
+                trades: [],
+                totalBuys: 0,
+                totalSells: 0,
+                totalVolume: 0,
+                realizedPnL: 0,
+                lastUpdated: Date.now(),
+            }, null, 2));
+            Logger.info('🗑️ Cleared trade_history.json');
+        }
+
+        // CRITICAL FIX: Also delete simulation_state.json to prevent positions from being restored
+        const simulationStateFile = path.join(dataDir, 'simulation_state.json');
+        if (fs.existsSync(simulationStateFile)) {
+            fs.unlinkSync(simulationStateFile);
+            Logger.info('🗑️ Deleted simulation_state.json (prevents position resurrection)');
+        }
+
         // Show final state
         const simTracker = getSimulationTracker();
         Logger.separator();
@@ -35,10 +60,11 @@ async function resetSimulation(): Promise<void> {
         Logger.info(`💵 Current balance: $${simTracker.getCurrentBalance().toFixed(2)}`);
         Logger.info(`📦 Open positions: 0`);
         Logger.info(`📈 Balance history: Reset to initial snapshot`);
+        Logger.info(`📜 Trade history: Cleared`);
         Logger.separator();
         
         Logger.info('🚀 Ready to start fresh simulation!');
-        Logger.info('💡 Use "npm start" to begin copy trading');
+        Logger.info('💡 Use "npm run dev" to begin copy trading');
         
     } catch (error) {
         Logger.error(`❌ Error resetting simulation: ${error}`);

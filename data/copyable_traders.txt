@@ -1,0 +1,68 @@
+# findCopyableTraders — 2026-03-02
+# 61 traders qualifiés (stabilité >= 60%, P&L réalisé >= $0)
+# Trié par score composite décroissant
+
+0x96489abcb9f583d6835c8ef95ffc923d05a86825 # Whimsical-Terminal # rank:1 stabilité:100% réalisé:+$88148 score:100.0
+0xca765a4d03509c1dfed7a061b3fa632190d428b3 # Assured-Advertising # rank:2 stabilité:100% réalisé:+$51924 score:100.0
+0xe8dd7741ccb12350957ec71e9ee332e0d1e6ec86 # Real-Veteran # rank:3 stabilité:100% réalisé:+$147232 score:100.0
+0x7740253843b20007a4c99c3766878351002acbcd # Pesky-Dysfunction # rank:4 stabilité:100% réalisé:+$12919 score:100.0
+0xdf6da574f8b0c0ce5e01ddb1c5a49b87993e9c5c # Willing-Minnow # rank:5 stabilité:100% réalisé:+$36519 score:100.0
+0x63d43bbb87f85af03b8f2f9e2fad7b54334fa2f1 # Vivid-Macrofauna # rank:6 stabilité:100% réalisé:+$7007 score:91.0
+0x94e4639e9aef0eab61533ecafe74c5f15662534a # Prize-Torte # rank:7 stabilité:100% réalisé:+$4518 score:83.6
+0x6586fb56a335aeb953b09b299eb181de3ffd497c # Agitated-Crowd # rank:8 stabilité:100% réalisé:+$2869 score:78.6
+0xd6eef76188c7068719ac881460b7431e1ae137a2 # Agreeable-Airbus # rank:9 stabilité:100% réalisé:+$1526 score:74.6
+0xf0b0ef1d6320c6be896b4c9c54dd74407e7f8cab # Faraway-Seaside # rank:10 stabilité:100% réalisé:+$890 score:72.7
+0xd6321c049c527e8a622d6aa35f514ae74f798afb # Irritating-Venti # rank:11 stabilité:100% réalisé:+$612 score:71.8
+0x46ceeec62ed877c6db4a0ee4bc4385318f06c842 # Faithful-Intervention # rank:12 stabilité:100% réalisé:+$184 score:70.6
+0x3bef3a6bc4b1d895ed24ca37e88f06367a8ef04e # Juvenile-Hypothesis # rank:13 stabilité:100% réalisé:+$150 score:70.4
+0xded655927255bba7b5544abafc73ebd2cd4381eb # Previous-Vest # rank:14 stabilité:100% réalisé:+$97 score:70.3
+0x1cdd071bb612de6d66d0c882b676c663697de595 # Firsthand-Eaglet # rank:15 stabilité:100% réalisé:+$96 score:70.3
+0x92eb1cd8de460e6f89115218acd8c35d58ba986a # Luminous-Roadway # rank:16 stabilité:100% réalisé:+$90 score:70.3
+0x5f390e4b7d6f06d6756a6c92afdbf7b3176aa78c # rank:17 stabilité:100% réalisé:+$81 score:70.2
+0xfe726a6efb705a7e17f8200919b1f05a8a17f18c # Worthy-Lament # rank:18 stabilité:100% réalisé:+$36 score:70.1
+0xb8b55faf413585715d7c2a2d39728aedf9daaa49 # Roasted-Belief # rank:19 stabilité:100% réalisé:+$31 score:70.1
+0x686e6b34f7c4be594db3c98bf7215d6d10615351 # Annual-Loaf # rank:20 stabilité:100% réalisé:+$20 score:70.1
+0x9868325cf3760b5256450e561d4ab6095943907e # Likely-Exhibit # rank:21 stabilité:100% réalisé:+$18 score:70.1
+0xce1fb2d561c053904985e8ec4dfa3345ceef0669 # Handmade-Pard # rank:22 stabilité:100% réalisé:+$7 score:70.0
+0xd3576f2c058ca88a5a48093bdae4732e2ce2c03a # Nautical-Handful # rank:23 stabilité:100% réalisé:+$5 score:70.0
+0x1ccdefae26851f0c085764ab9c1855f83f6d510d # rank:24 stabilité:100% réalisé:+$2 score:70.0
+0xb177c841a6688521cc5de8b84740619877b550ce # Truthful-Ash # rank:25 stabilité:100% réalisé:+$1 score:70.0
+0x93abbc022ce98d6f45d4444b594791cc4b7a9723 # Velvety-Relief # rank:26 stabilité:100% réalisé:+$0 score:70.0
+0xc75133e64c6fb0fd6ae126517f46515be93b2e03 # rank:27 stabilité:100% réalisé:+$0 score:70.0
+0x2c1e340f1d9b014b4e148ab6f810671ef3472b75 # Smooth-Hop # rank:28 stabilité:100% réalisé:+$0 score:70.0
+0x1df00f367bcf49fe28644f88fff4d0c8871805c7 # Finished-Vernacular # rank:29 stabilité:100% réalisé:+$-9 score:70.0
+0xfa7805e1f0e00d110d9cef1517620bb8a08fbd4e # Best-Eardrum # rank:30 stabilité:100% réalisé:+$0 score:70.0
+0x82d931ed5ad46cb6929c0454f5c73bb44cbebba0 # Trained-Summit # rank:31 stabilité:100% réalisé:+$0 score:70.0
+0x6475ee01d547f85b3c9bab6d2177804173d4a9f8 # Superficial-Backburn # rank:32 stabilité:100% réalisé:+$0 score:70.0
+0xd3aa9fb9d2af93770989983af311cc3ee2466e3d # rank:33 stabilité:100% réalisé:+$0 score:70.0
+0x3eae9f8a3e1eba6b7f4792fc3877e50a32e2c47b # rank:34 stabilité:100% réalisé:+$0 score:70.0
+0x5f2442e1b38d9f74572aef65a7967a99afc9cc38 # Welcome-Growth # rank:35 stabilité:100% réalisé:+$-0 score:70.0
+0xb7e16290183756994d50a7d5be7d6973f48cf53b # Extraneous-Brochure # rank:36 stabilité:100% réalisé:+$-0 score:70.0
+0xeb617fc6a5b2a2454d8ed40b15964cbd4689610e # Clever-Fava # rank:37 stabilité:100% réalisé:+$0 score:70.0
+0xf35af215b9e69ff491287c2a9a1d9a2496eae887 # Immaterial-Drum # rank:38 stabilité:100% réalisé:+$-0 score:70.0
+0x517f40fc578f711de03cad68adb7dd4382511b0e # Parched-Bellows # rank:39 stabilité:100% réalisé:+$-1 score:70.0
+0xa740e8e14e20f9aba56f5100c5f20f2648b2586a # Palatable-Squid # rank:40 stabilité:100% réalisé:+$0 score:70.0
+0x51175f20ef9eedfd3464aec0070b254d199d3ada # Tough-Land # rank:41 stabilité:100% réalisé:+$-1 score:70.0
+0x361767516242b13b244f3b019affa325b55c0558 # Glittering-Energy # rank:42 stabilité:100% réalisé:+$-0 score:70.0
+0x5b90b38d4b32536766875bc387130822e152b0a7 # Lumbering-Pasture # rank:43 stabilité:100% réalisé:+$-0 score:70.0
+0x98018fa04aed82d26f03f9720450f7411f053b54 # Ordinary-Favor # rank:44 stabilité:100% réalisé:+$0 score:70.0
+0x42bb4faa49059b5b0338649969e288b3e9083936 # Muted-Astrologer # rank:45 stabilité:100% réalisé:+$-0 score:70.0
+0x928f0d53f4d254f1db9ed289e95936a56b6c5757 # Wiggly-League # rank:46 stabilité:100% réalisé:+$-0 score:70.0
+0x00616cd43fd17a69b557f0928d2f8bdd57ed5e5a # Digital-Sign # rank:47 stabilité:100% réalisé:+$-0 score:70.0
+0xf19fc8246bdbfd90dd01eb5ede2c2a33924cd494 # Dead-Nest # rank:48 stabilité:100% réalisé:+$-0 score:70.0
+0x250ae33b3316d95e170a15792dcd38979c352ef2 # Scratchy-Peacoat # rank:49 stabilité:100% réalisé:+$-0 score:70.0
+0xb3300dee717075c1d7db615da7143d3251ff840e # Strong-Developmental # rank:50 stabilité:100% réalisé:+$-0 score:70.0
+0xc93bd556fa55a90cdfa73d26c2941dbbd741875e # rank:51 stabilité:100% réalisé:+$0 score:70.0
+0x74de5395941ddbe418a94934a50a6c76b6611e22 # Identical-Sulfur # rank:52 stabilité:100% réalisé:+$0 score:68.0
+0x958c94d17399936b82b3fab954dd158464f92902 # rank:53 stabilité:100% réalisé:+$0 score:66.0
+0xe716b4770df8722ff9de06ce93565a970590653e # Impeccable-Grit # rank:54 stabilité:100% réalisé:+$0 score:62.0
+0x14964aefa2cd7caff7878b3820a690a03c5aa429 # Venerated-Ink # rank:55 stabilité:100% réalisé:+$0 score:60.0
+0xa40ce571930958f9a314b05dbd8da2d47ac487e8 # rank:56 stabilité:100% réalisé:+$0 score:56.0
+0x81af59128b0649e9a15dfeb29eb3e3db1afa57d3 # Angelic-Peony # rank:57 stabilité:100% réalisé:+$0 score:54.0
+0xf78e5fdd4c78bd6625cdeae620c7e2220f28360d # rank:58 stabilité:100% réalisé:+$0 score:54.0
+0x68304d72961ed3230e02c0a2e23c1d4571944a16 # rank:59 stabilité:100% réalisé:+$0 score:52.0
+0x5ebf2584f02b0f03b805ba157efb6015d1fa2e4f # Short-Term-Chili # rank:60 stabilité:100% réalisé:+$0 score:52.0
+0x7b6eae01c07d0792846d488b0cdca25956442be4 # Periodic-Acceptance # rank:61 stabilité:100% réalisé:+$0 score:52.0
+
+# USER_ADDRESSES pour .env (toutes):
+USER_ADDRESSES='0x96489abcb9f583d6835c8ef95ffc923d05a86825, 0xca765a4d03509c1dfed7a061b3fa632190d428b3, 0xe8dd7741ccb12350957ec71e9ee332e0d1e6ec86, 0x7740253843b20007a4c99c3766878351002acbcd, 0xdf6da574f8b0c0ce5e01ddb1c5a49b87993e9c5c, 0x63d43bbb87f85af03b8f2f9e2fad7b54334fa2f1, 0x94e4639e9aef0eab61533ecafe74c5f15662534a, 0x6586fb56a335aeb953b09b299eb181de3ffd497c, 0xd6eef76188c7068719ac881460b7431e1ae137a2, 0xf0b0ef1d6320c6be896b4c9c54dd74407e7f8cab, 0xd6321c049c527e8a622d6aa35f514ae74f798afb, 0x46ceeec62ed877c6db4a0ee4bc4385318f06c842, 0x3bef3a6bc4b1d895ed24ca37e88f06367a8ef04e, 0xded655927255bba7b5544abafc73ebd2cd4381eb, 0x1cdd071bb612de6d66d0c882b676c663697de595, 0x92eb1cd8de460e6f89115218acd8c35d58ba986a, 0x5f390e4b7d6f06d6756a6c92afdbf7b3176aa78c, 0xfe726a6efb705a7e17f8200919b1f05a8a17f18c, 0xb8b55faf413585715d7c2a2d39728aedf9daaa49, 0x686e6b34f7c4be594db3c98bf7215d6d10615351, 0x9868325cf3760b5256450e561d4ab6095943907e, 0xce1fb2d561c053904985e8ec4dfa3345ceef0669, 0xd3576f2c058ca88a5a48093bdae4732e2ce2c03a, 0x1ccdefae26851f0c085764ab9c1855f83f6d510d, 0xb177c841a6688521cc5de8b84740619877b550ce, 0x93abbc022ce98d6f45d4444b594791cc4b7a9723, 0xc75133e64c6fb0fd6ae126517f46515be93b2e03, 0x2c1e340f1d9b014b4e148ab6f810671ef3472b75, 0x1df00f367bcf49fe28644f88fff4d0c8871805c7, 0xfa7805e1f0e00d110d9cef1517620bb8a08fbd4e, 0x82d931ed5ad46cb6929c0454f5c73bb44cbebba0, 0x6475ee01d547f85b3c9bab6d2177804173d4a9f8, 0xd3aa9fb9d2af93770989983af311cc3ee2466e3d, 0x3eae9f8a3e1eba6b7f4792fc3877e50a32e2c47b, 0x5f2442e1b38d9f74572aef65a7967a99afc9cc38, 0xb7e16290183756994d50a7d5be7d6973f48cf53b, 0xeb617fc6a5b2a2454d8ed40b15964cbd4689610e, 0xf35af215b9e69ff491287c2a9a1d9a2496eae887, 0x517f40fc578f711de03cad68adb7dd4382511b0e, 0xa740e8e14e20f9aba56f5100c5f20f2648b2586a, 0x51175f20ef9eedfd3464aec0070b254d199d3ada, 0x361767516242b13b244f3b019affa325b55c0558, 0x5b90b38d4b32536766875bc387130822e152b0a7, 0x98018fa04aed82d26f03f9720450f7411f053b54, 0x42bb4faa49059b5b0338649969e288b3e9083936, 0x928f0d53f4d254f1db9ed289e95936a56b6c5757, 0x00616cd43fd17a69b557f0928d2f8bdd57ed5e5a, 0xf19fc8246bdbfd90dd01eb5ede2c2a33924cd494, 0x250ae33b3316d95e170a15792dcd38979c352ef2, 0xb3300dee717075c1d7db615da7143d3251ff840e, 0xc93bd556fa55a90cdfa73d26c2941dbbd741875e, 0x74de5395941ddbe418a94934a50a6c76b6611e22, 0x958c94d17399936b82b3fab954dd158464f92902, 0xe716b4770df8722ff9de06ce93565a970590653e, 0x14964aefa2cd7caff7878b3820a690a03c5aa429, 0xa40ce571930958f9a314b05dbd8da2d47ac487e8, 0x81af59128b0649e9a15dfeb29eb3e3db1afa57d3, 0xf78e5fdd4c78bd6625cdeae620c7e2220f28360d, 0x68304d72961ed3230e02c0a2e23c1d4571944a16, 0x5ebf2584f02b0f03b805ba157efb6015d1fa2e4f, 0x7b6eae01c07d0792846d488b0cdca25956442be4'

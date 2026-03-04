@@ -96,9 +96,9 @@ const validateAddresses = (): void => {
  */
 const validateNumericConfig = (): void => {
     const fetchInterval = parseInt(process.env.FETCH_INTERVAL || '1', 10);
-    if (isNaN(fetchInterval) || fetchInterval <= 0) {
+    if (isNaN(fetchInterval) || fetchInterval < 0) {
         throw new Error(
-            `Invalid FETCH_INTERVAL: ${process.env.FETCH_INTERVAL}. Must be a positive integer.`
+            `Invalid FETCH_INTERVAL: ${process.env.FETCH_INTERVAL}. Must be a non-negative integer (0 = no extra wait between cycles).`
         );
     }
 
@@ -362,6 +362,13 @@ export const ENV = {
     RETRY_LIMIT: parseInt(process.env.RETRY_LIMIT || '3', 10),
     DRY_RUN: process.env.DRY_RUN === 'true',
     SIMULATION_STARTING_BALANCE: parseFloat(process.env.SIMULATION_STARTING_BALANCE || '1000.0'),
+    SIMULATION_MODE: process.env.SIMULATION_MODE || 'HYBRID',
+    SIMULATION_MAX_SLIPPAGE_PERCENT: parseFloat(process.env.SIMULATION_MAX_SLIPPAGE_PERCENT || '5.0'),
+    SIMULATION_PARTIAL_FILL_STRATEGY: process.env.SIMULATION_PARTIAL_FILL_STRATEGY || 'WARN',
+    // Copy delay simulation (realistic timing between trader and bot execution)
+    SIMULATION_COPY_DELAY_MIN: parseFloat(process.env.SIMULATION_COPY_DELAY_MIN || '5.0'),
+    SIMULATION_COPY_DELAY_MAX: parseFloat(process.env.SIMULATION_COPY_DELAY_MAX || '15.0'),
+    SIMULATION_COPY_DELAY_ENABLED: process.env.SIMULATION_COPY_DELAY_ENABLED !== 'false', // Enabled by default
     // Legacy parameters (kept for backward compatibility)
     TRADE_MULTIPLIER: parseFloat(process.env.TRADE_MULTIPLIER || '1.0'),
     COPY_PERCENTAGE: parseFloat(process.env.COPY_PERCENTAGE || '10.0'),
@@ -402,4 +409,13 @@ export const ENV = {
     MIN_TRADER_WIN_RATE: parseFloat(process.env.MIN_TRADER_WIN_RATE || '0'),
     MIN_TRADER_AVG_POSITION_SIZE: parseFloat(process.env.MIN_TRADER_AVG_POSITION_SIZE || '0'),
     MIN_MARKET_DAILY_VOLUME: parseFloat(process.env.MIN_MARKET_DAILY_VOLUME || '0'),
+    // Price protection filters
+    // MAX_BUY_PRICE: refuse BUY trades at prices above this threshold (default: 0.95)
+    // At $0.95 max gain = 5.26%, below that fees eat all profit
+    MAX_BUY_PRICE: parseFloat(process.env.MAX_BUY_PRICE || '0.95'),
+    // MIN_GAIN_POTENTIAL_PERCENT: minimum possible gain % to accept a trade (default: 3.0)
+    // Computed as: (1 - price) / price * 100. At $0.97 = 3.09%, at $0.99 = 1.01% (rejected)
+    MIN_GAIN_POTENTIAL_PERCENT: parseFloat(process.env.MIN_GAIN_POTENTIAL_PERCENT || '3.0'),
+    // REAL_GAS_FEES: use Polygon Gas Station API for real gas costs (default: true)
+    REAL_GAS_FEES: process.env.REAL_GAS_FEES !== 'false',
 };

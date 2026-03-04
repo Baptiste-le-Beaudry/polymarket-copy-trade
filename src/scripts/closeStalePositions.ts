@@ -77,14 +77,18 @@ const isInsufficientBalanceOrAllowanceError = (message: string | undefined): boo
     return lower.includes('not enough balance') || lower.includes('allowance');
 };
 
-const updatePolymarketCache = async (clobClient: ClobClient, tokenId: string) => {
+const updatePolymarketCache = async (clobClient: ClobClient, tokenId: string): Promise<boolean> => {
     try {
         await clobClient.updateBalanceAllowance({
             asset_type: AssetType.CONDITIONAL,
             token_id: tokenId,
         });
+        // Wait a bit for cache to propagate
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return true;
     } catch (error) {
         console.log(`⚠️  Failed to refresh balance cache for ${tokenId}:`, error);
+        return false;
     }
 };
 

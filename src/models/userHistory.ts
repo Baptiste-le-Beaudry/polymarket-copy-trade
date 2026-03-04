@@ -62,6 +62,7 @@ const activitySchema = new Schema({
     profileImageOptimized: { type: String, required: false },
     bot: { type: Boolean, required: false },
     botExcutedTime: { type: Number, required: false },
+    executedAt: { type: Number, required: false },    // Unix ms when the bot actually executed this trade
     myBoughtSize: { type: Number, required: false }, // Tracks actual tokens we bought
 });
 

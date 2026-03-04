@@ -1,4 +1,4 @@
-import { ClobClient, OrderType, Side } from '@polymarket/clob-client';
+import { AssetType, ClobClient, OrderType, Side } from '@polymarket/clob-client';
 import { ENV } from '../config/env';
 import { UserActivityInterface, UserPositionInterface } from '../interfaces/User';
 import { getUserActivityModel } from '../models/userHistory';
@@ -7,6 +7,35 @@ import * as crypto from 'crypto';
 import { calculateOrderSize, getTradeMultiplier, CopyStrategy } from '../config/copyStrategy';
 import { getSimulationTracker } from './simulationBalance';
 import { getPositionTracker } from './positionTracker';
+import { logBotEvent, isTradeAllowed, getCircuitBreakerReason } from './logAnalyzer';
+import { executeSimulatedTrade } from './simulationExecutor';
+import fetchData from './fetchData';
+
+/**
+ * Vérifie ce que le marché faisait au moment exact où le trader a exécuté son trade.
+ * Interroge le CLOB historical trades dans une fenêtre de ±60s autour du timestamp du trader.
+ * Permet de distinguer :
+ *   - Un trade RÉCENT (trader vient d'acheter, prix confirmé par le CLOB) → bot peut rater d'une poignée de secondes
+ *   - Un trade STALE (position ancienne détectée maintenant, prix du CLOB ne correspond plus)
+ */
+const logMarketPriceAtTraderTime = async (asset: string, traderTimestamp: number, traderPrice: number): Promise<void> => {
+    try {
+        const url = `https://clob.polymarket.com/trades?token_id=${asset}&after=${traderTimestamp - 60}&before=${traderTimestamp + 60}&limit=5`;
+        const data = await fetchData(url) as Array<{ price: string; side: string }>;
+        if (!Array.isArray(data) || data.length === 0) {
+            Logger.info(`🕐 Marché au moment du trade : aucune transaction CLOB dans ±60s`);
+            return;
+        }
+        const clobPrice = parseFloat(data[0].price);
+        const diff = Math.abs(clobPrice - traderPrice);
+        const confirmed = diff < 0.05;
+        const icon = confirmed ? '✅' : '⚠️';
+        const label = confirmed ? 'confirmé — trade frais' : 'différent — trade ancien ou avg price';
+        Logger.info(`🕐 Marché au moment du trade : $${clobPrice.toFixed(4)} ${icon} ${label} (trader: $${traderPrice.toFixed(4)})`);
+    } catch {
+        // Info supplémentaire — ne pas bloquer si l'appel échoue
+    }
+};
 
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
 const COPY_STRATEGY_CONFIG = ENV.COPY_STRATEGY_CONFIG;
@@ -19,6 +48,68 @@ const COPY_PERCENTAGE = ENV.COPY_PERCENTAGE;
 // Polymarket minimum order sizes (from env)
 const MIN_ORDER_SIZE_USD = ENV.MIN_ORDER_SIZE_USD ?? 1.0; // Minimum order size in USD for BUY orders
 const MIN_ORDER_SIZE_TOKENS = ENV.MIN_ORDER_SIZE_TOKENS ?? 1.0; // Minimum order size in tokens for SELL/MERGE orders
+
+// Slippage protection (configurable via .env)
+const MAX_SLIPPAGE_PERCENT = parseFloat(process.env.MAX_SLIPPAGE_PERCENT || '5.0');
+
+/**
+ * Check if a BUY price is acceptable:
+ * 1. Price must be below MAX_BUY_PRICE (e.g. 0.95)
+ * 2. Maximum possible gain must exceed MIN_GAIN_POTENTIAL_PERCENT
+ *    (gain potential = (1 - price) / price * 100)
+ *
+ * This blocks:
+ * - Near-resolved markets (e.g. $0.999 → only 0.1% upside)
+ * - Positions where fees will always exceed potential profit
+ */
+const checkPriceAcceptable = (price: number): { allowed: boolean; reason?: string } => {
+    const maxBuyPrice = ENV.MAX_BUY_PRICE;
+    const minGainPercent = ENV.MIN_GAIN_POTENTIAL_PERCENT;
+
+    if (price >= maxBuyPrice) {
+        return {
+            allowed: false,
+            reason: `Prix trop élevé: $${price.toFixed(4)} ≥ MAX_BUY_PRICE $${maxBuyPrice.toFixed(4)} (gain max = ${((1 - price) / price * 100).toFixed(2)}%)`,
+        };
+    }
+
+    const gainPotential = (1 - price) / price * 100;
+    if (gainPotential < minGainPercent) {
+        return {
+            allowed: false,
+            reason: `Gain potentiel insuffisant: ${gainPotential.toFixed(2)}% < ${minGainPercent}% min (prix: $${price.toFixed(4)})`,
+        };
+    }
+
+    return { allowed: true };
+};
+
+/**
+ * Calculate slippage between current market price and trader's execution price
+ * @returns slippage percentage (positive = market price higher than trader price)
+ */
+const calculateSlippage = (currentPrice: number, traderPrice: number): number => {
+    if (traderPrice === 0) return 0;
+    return ((currentPrice - traderPrice) / traderPrice) * 100;
+};
+
+/**
+ * Check if slippage is acceptable for a trade
+ * @returns { allowed: boolean, slippage: number, reason?: string }
+ */
+const checkSlippageAllowed = (currentPrice: number, traderPrice: number): { allowed: boolean; slippage: number; reason?: string } => {
+    const slippage = calculateSlippage(currentPrice, traderPrice);
+    
+    if (slippage > MAX_SLIPPAGE_PERCENT) {
+        return {
+            allowed: false,
+            slippage,
+            reason: `Slippage trop élevé: ${slippage.toFixed(2)}% > ${MAX_SLIPPAGE_PERCENT}% max (prix marché: $${currentPrice.toFixed(4)} vs trader: $${traderPrice.toFixed(4)})`
+        };
+    }
+    
+    return { allowed: true, slippage };
+};
 
 const extractOrderError = (response: unknown): string | undefined => {
     if (!response) {
@@ -80,6 +171,18 @@ const postOrder = async (
     // Get UserActivity model first (needed for both real and simulation modes)
     const UserActivity = getUserActivityModel(userAddress);
 
+    // CIRCUIT BREAKER CHECK - Block new BUY trades if triggered
+    if (condition === 'buy' && !isTradeAllowed()) {
+        const reason = getCircuitBreakerReason();
+        Logger.warning(`🚨 CIRCUIT BREAKER ACTIF - Trade bloqué: ${reason}`);
+        logBotEvent('WARNING', `Trade BUY bloqué par circuit breaker`, { 
+            asset: trade.asset, 
+            reason 
+        });
+        await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+        return;
+    }
+
     // DRY RUN MODE - Skip actual order execution
     if (ENV.DRY_RUN) {
         const simTracker = getSimulationTracker();
@@ -104,6 +207,29 @@ const postOrder = async (
                 );
             }
             
+            // Don't re-buy positions restored from a previous session
+            if (simTracker.isRestoredPosition(trade.asset)) {
+                Logger.info(`ℹ️ [SIMULATION] Skipping BUY — position already held from previous session (will follow SELL only)`);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                return;
+            }
+
+            // Price protection: block near-resolved markets and high-price traps
+            if (trade.price) {
+                const priceCheck = checkPriceAcceptable(trade.price);
+                if (!priceCheck.allowed) {
+                    Logger.warning(`🚫 [SIMULATION] Trade refusé — ${priceCheck.reason}`);
+                    await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                    return;
+                }
+            }
+
+            // Vérifier le prix CLOB au moment exact où le trader a exécuté
+            // Permet de savoir si le trade est frais (confirmé) ou ancien (avg price stale)
+            if (trade.asset && trade.timestamp && trade.price) {
+                await logMarketPriceAtTraderTime(trade.asset, trade.timestamp, trade.price);
+            }
+
             const virtualBalance = simTracker.getBalance();
             const orderCalc = calculateOrderSize(
                 COPY_STRATEGY_CONFIG,
@@ -112,12 +238,65 @@ const postOrder = async (
                 my_position ? my_position.size * my_position.avgPrice : 0
             );
             Logger.info(`📊 ${orderCalc.reasoning}`);
-            
+
             if (orderCalc.finalAmount > 0 && trade.price) {
                 try {
-                    simTracker.buy(trade.asset, orderCalc.finalAmount, trade.price);
-                    Logger.success(`✓ [SIMULATION] BUY executed: $${orderCalc.finalAmount.toFixed(2)} @ $${trade.price.toFixed(4)}`);
-                    
+                    const result = await executeSimulatedTrade(
+                        trade.asset,
+                        'BUY',
+                        orderCalc.finalAmount,
+                        trade.price,
+                        userAddress
+                    );
+
+                    if (!result.success) {
+                        Logger.error(`❌ [SIMULATION] BUY failed: ${result.reason}`);
+                        logBotEvent('TRADE_FAILED', `BUY failed: ${result.reason}`, {
+                            type: 'BUY',
+                            amount: orderCalc.finalAmount,
+                            price: trade.price,
+                            asset: trade.asset,
+                            error: result.reason
+                        });
+                        return;
+                    }
+
+                    // Secondary price check: verify the ACTUAL execution price (order book ask)
+                    // The initial check used trade.price (trader's historical price), but the
+                    // order book may return a much higher current price (e.g. $0.27 → $0.99)
+                    if (result.avgPrice) {
+                        const execPriceCheck = checkPriceAcceptable(result.avgPrice);
+                        if (!execPriceCheck.allowed) {
+                            Logger.warning(`🚫 [SIMULATION] Trade annulé — prix d'exécution réel inacceptable: ${execPriceCheck.reason}`);
+                            Logger.warning(`   (trader avait acheté à $${trade.price?.toFixed(4)}, marché actuel à $${result.avgPrice.toFixed(4)})`);
+                            await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                            return;
+                        }
+                    }
+
+                    Logger.success(
+                        `✓ [SIMULATION] BUY executed: $${orderCalc.finalAmount.toFixed(2)} @ $${result.avgPrice?.toFixed(4) || trade.price.toFixed(4)} avg`
+                    );
+
+                    if (result.slippage !== undefined) {
+                        Logger.info(`  📊 Slippage: ${result.slippage >= 0 ? '+' : ''}${result.slippage.toFixed(2)}%${result.levelsUsed ? ` (${result.levelsUsed} levels used)` : ''}`);
+                    }
+
+                    if (result.partialFill) {
+                        Logger.warning(`  ⚠️ Partial fill: ${result.tokensTraded?.toFixed(2)} tokens filled`);
+                    }
+
+                    // Log success event
+                    logBotEvent('TRADE_SUCCESS', `BUY $${orderCalc.finalAmount.toFixed(2)} @ $${result.avgPrice?.toFixed(4) || trade.price.toFixed(4)}`, {
+                        type: 'BUY',
+                        amount: orderCalc.finalAmount,
+                        price: result.avgPrice || trade.price,
+                        asset: trade.asset,
+                        market: trade.title,
+                        slippage: result.slippage,
+                        partialFill: result.partialFill
+                    });
+
                     // Track in persistent position tracker for trader stats
                     const tracker = getPositionTracker();
                     tracker.trackBuy(
@@ -125,13 +304,20 @@ const postOrder = async (
                         trade.conditionId,
                         trade.title || 'Unknown Market',
                         trade.outcome || 'Unknown',
-                        orderCalc.finalAmount / trade.price,
-                        trade.price,
+                        result.tokensTraded || (orderCalc.finalAmount / trade.price),
+                        result.avgPrice || trade.price,
                         orderCalc.finalAmount,
                         userAddress
                     );
                 } catch (error) {
                     Logger.error(`❌ [SIMULATION] BUY failed: ${error instanceof Error ? error.message : String(error)}`);
+                    logBotEvent('TRADE_FAILED', `BUY failed: ${error instanceof Error ? error.message : String(error)}`, {
+                        type: 'BUY',
+                        amount: orderCalc.finalAmount,
+                        price: trade.price,
+                        asset: trade.asset,
+                        error: String(error)
+                    });
                 }
             } else {
                 Logger.warning(`⚠️ [SIMULATION] Order too small or missing price`);
@@ -141,14 +327,66 @@ const postOrder = async (
             if (virtualPosition && trade.price) {
                 const tokensToSell = Math.min(virtualPosition.size, trade.size || virtualPosition.size);
                 try {
-                    simTracker.sell(trade.asset, tokensToSell, trade.price);
-                    Logger.success(`✓ [SIMULATION] SELL executed: ${tokensToSell.toFixed(2)} tokens @ $${trade.price.toFixed(4)}`);
-                    
+                    const result = await executeSimulatedTrade(
+                        trade.asset,
+                        'SELL',
+                        tokensToSell,
+                        trade.price,
+                        userAddress
+                    );
+
+                    if (!result.success) {
+                        Logger.error(`❌ [SIMULATION] SELL failed: ${result.reason}`);
+                        logBotEvent('TRADE_FAILED', `SELL failed: ${result.reason}`, {
+                            type: 'SELL',
+                            tokens: tokensToSell,
+                            price: trade.price,
+                            asset: trade.asset,
+                            error: result.reason
+                        });
+                        return;
+                    }
+
+                    Logger.success(
+                        `✓ [SIMULATION] SELL executed: ${result.tokensTraded?.toFixed(2) || tokensToSell.toFixed(2)} tokens @ $${result.avgPrice?.toFixed(4) || trade.price.toFixed(4)} avg`
+                    );
+
+                    if (result.slippage !== undefined) {
+                        Logger.info(`  📊 Slippage: ${result.slippage >= 0 ? '+' : ''}${result.slippage.toFixed(2)}%${result.levelsUsed ? ` (${result.levelsUsed} levels used)` : ''}`);
+                    }
+
+                    if (result.partialFill) {
+                        Logger.warning(`  ⚠️ Partial fill: ${result.tokensTraded?.toFixed(2)} tokens filled`);
+                    }
+
+                    // Log success event
+                    logBotEvent('TRADE_SUCCESS', `SELL ${result.tokensTraded?.toFixed(2) || tokensToSell.toFixed(2)} tokens @ $${result.avgPrice?.toFixed(4) || trade.price.toFixed(4)}`, {
+                        type: 'SELL',
+                        tokens: result.tokensTraded || tokensToSell,
+                        price: result.avgPrice || trade.price,
+                        asset: trade.asset,
+                        market: trade.title,
+                        slippage: result.slippage,
+                        partialFill: result.partialFill
+                    });
+
                     // Track sell in position tracker
                     const tracker = getPositionTracker();
-                    tracker.trackSell(trade.conditionId, tokensToSell, trade.price, tokensToSell * trade.price);
+                    tracker.trackSell(
+                        trade.conditionId,
+                        result.tokensTraded || tokensToSell,
+                        result.avgPrice || trade.price,
+                        (result.tokensTraded || tokensToSell) * (result.avgPrice || trade.price)
+                    );
                 } catch (error) {
                     Logger.error(`❌ [SIMULATION] SELL failed: ${error instanceof Error ? error.message : String(error)}`);
+                    logBotEvent('TRADE_FAILED', `SELL failed: ${error instanceof Error ? error.message : String(error)}`, {
+                        type: 'SELL',
+                        tokens: tokensToSell,
+                        price: trade.price,
+                        asset: trade.asset,
+                        error: String(error)
+                    });
                 }
             } else {
                 Logger.warning(`⚠️ [SIMULATION] No virtual position to sell`);
@@ -308,6 +546,21 @@ const postOrder = async (
         Logger.info(`Your balance: $${my_balance.toFixed(2)}`);
         Logger.info(`Trader bought: $${trade.usdcSize.toFixed(2)}`);
 
+        // Price protection: block near-resolved markets and high-price traps
+        if (trade.price) {
+            const priceCheck = checkPriceAcceptable(trade.price);
+            if (!priceCheck.allowed) {
+                Logger.warning(`🚫 Trade refusé — ${priceCheck.reason}`);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                return;
+            }
+        }
+
+        // Vérifier le prix CLOB au moment exact du trade du trader
+        if (trade.asset && trade.timestamp && trade.price) {
+            await logMarketPriceAtTraderTime(trade.asset, trade.timestamp, trade.price);
+        }
+
         // Check MAX_OPEN_POSITIONS limit (if configured)
         // Note: This check is synchronized at the executor level to prevent race conditions
         if (ENV.MAX_OPEN_POSITIONS && !my_position) {
@@ -389,9 +642,20 @@ const postOrder = async (
                     Logger.success(`✅ Target reached: Bought ${totalBoughtTokens.toFixed(2)} tokens`);
                     break; // Exit - we have enough tokens
                 }
+
+                // Vérifier le prix actuel du marché (pas le prix du trader)
+                // Protège contre les marchés quasi-résolus où le prix a monté depuis l'achat du trader
+                const currentAskPrice = parseFloat(minPriceAsk.price);
+                const currentPriceCheck = checkPriceAcceptable(currentAskPrice);
+                if (!currentPriceCheck.allowed) {
+                    Logger.warning(`🚫 FIXED_TOKENS refusé — prix actuel inacceptable: ${currentPriceCheck.reason}`);
+                    await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                    break;
+                }
+
                 const tokensAvailable = parseFloat(minPriceAsk.size);
                 const tokensThisOrder = Math.min(tokensNeeded, tokensAvailable);
-                orderSize = tokensThisOrder * parseFloat(minPriceAsk.price);
+                orderSize = tokensThisOrder * currentAskPrice;
                 
                 // Check if buying would exceed cash reserve
                 const minReserve = ENV.MIN_CASH_RESERVE || 0;
@@ -405,11 +669,30 @@ const postOrder = async (
                 
                 Logger.info(`📦 Buying ${tokensThisOrder.toFixed(2)} tokens = $${orderSize.toFixed(2)}`);
             } else {
-                // Regular strategies
-                if (parseFloat(minPriceAsk.price) - 0.05 > trade.price) {
-                    Logger.warning('Price slippage too high - skipping trade');
+                // Regular strategies - check slippage with configurable threshold
+                const slippageCheck = checkSlippageAllowed(parseFloat(minPriceAsk.price), trade.price);
+                if (!slippageCheck.allowed) {
+                    Logger.warning(`⚠️ ${slippageCheck.reason}`);
+                    logBotEvent('WARNING', 'Trade skipped due to high slippage', {
+                        asset: trade.asset,
+                        slippage: slippageCheck.slippage,
+                        maxAllowed: MAX_SLIPPAGE_PERCENT,
+                        currentPrice: parseFloat(minPriceAsk.price),
+                        traderPrice: trade.price
+                    });
                     await UserActivity.updateOne({ _id: trade._id }, { bot: true });
                     break;
+                }
+                
+                // Always log spread: trader price vs current market ask
+                {
+                    const askPrice = parseFloat(minPriceAsk.price);
+                    const spreadAbs = askPrice - trade.price;
+                    const sign = slippageCheck.slippage >= 0 ? '+' : '';
+                    const spreadEmoji = Math.abs(slippageCheck.slippage) < 1 ? '✅' : Math.abs(slippageCheck.slippage) < 3 ? '⚠️' : '🔴';
+                    Logger.info(
+                        `${spreadEmoji} Spread: ${sign}${slippageCheck.slippage.toFixed(2)}% | Trader: $${trade.price.toFixed(4)} → Ask: $${askPrice.toFixed(4)} (diff: ${spreadAbs >= 0 ? '+' : ''}$${spreadAbs.toFixed(4)})`
+                    );
                 }
 
                 // Check if remaining amount is below minimum before creating order
@@ -551,8 +834,12 @@ const postOrder = async (
             );
         }
 
+        // Track if trader closed entire position
+        let traderClosedEntirePosition = false;
+
         if (!user_position) {
             // Trader sold entire position - we sell entire position too
+            traderClosedEntirePosition = true;
             remaining = my_position.size;
             Logger.info(
                 `Trader closed entire position → Selling all your ${remaining.toFixed(2)} tokens`
@@ -604,18 +891,21 @@ const postOrder = async (
             }
         }
 
-        // FIXED_TOKENS strategy: Always sell 1 token at a time (or all if < 2 tokens remain)
+        // FIXED_TOKENS strategy: Always sell 5 tokens at a time (or all if < 6 tokens remain)
+        // EXCEPTION: If trader closed entire position, we also close entire position
         const isFixedTokens = COPY_STRATEGY_CONFIG.strategy === CopyStrategy.FIXED_TOKENS;
-        if (isFixedTokens) {
-            if (my_position.size < 2.0) {
-                // Less than 2 tokens total - sell everything
+        if (isFixedTokens && !traderClosedEntirePosition) {
+            if (my_position.size < 6.0) {
+                // Less than 6 tokens total - sell everything
                 Logger.info(`💡 FIXED_TOKENS: Position has ${my_position.size.toFixed(2)} tokens - selling all`);
                 remaining = my_position.size;
             } else {
-                // Sell 1 token at a time
-                Logger.info(`💡 FIXED_TOKENS: Selling 1 token (position has ${my_position.size.toFixed(2)} tokens)`);
-                remaining = Math.min(1.0, my_position.size);
+                // Sell 5 tokens at a time
+                Logger.info(`💡 FIXED_TOKENS: Selling 5 tokens (position has ${my_position.size.toFixed(2)} tokens)`);
+                remaining = Math.min(5.0, my_position.size);
             }
+        } else if (traderClosedEntirePosition) {
+            Logger.info(`💡 Trader closed position → Selling ALL ${my_position.size.toFixed(2)} tokens (ignoring FIXED_TOKENS limit)`);
         }
 
         // Check minimum order size
@@ -635,6 +925,18 @@ const postOrder = async (
             );
             Logger.warning(`Capping to maximum available: ${my_position.size.toFixed(2)} tokens`);
             remaining = my_position.size;
+        }
+
+        // Sync position allowance cache before selling
+        try {
+            await clobClient.updateBalanceAllowance({
+                asset_type: AssetType.CONDITIONAL,
+                token_id: trade.asset,
+            });
+            // Wait for cache to propagate
+            await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (syncError) {
+            Logger.warning(`⚠️ Cache sync failed, attempting sell anyway...`);
         }
 
         let retry = 0;
