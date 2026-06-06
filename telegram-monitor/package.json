@@ -1,0 +1,19 @@
+{
+  "name": "telegram-monitor",
+  "version": "1.0.0",
+  "description": "Surveille les alertes Telegram whale et vérifie si le bot copy trade les détecte",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "ts-node --project tsconfig.json src/main.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "mongoose": "^7.0.0",
+    "telegram": "^2.26.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

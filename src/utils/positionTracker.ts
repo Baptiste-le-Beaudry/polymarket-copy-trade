@@ -43,6 +43,7 @@ export interface TrackedPosition {
     conditionId: string;
     market: string;
     outcome: string;
+    eventSlug?: string; // pour construire le lien https://polymarket.com/event/{eventSlug}
     openedAt: number; // timestamp
     initialSize: number; // tokens
     initialValue: number; // USD
@@ -221,10 +222,11 @@ class PositionTracker {
         size: number,
         price: number,
         value: number,
-        trader?: string
+        trader?: string,
+        eventSlug?: string
     ): void {
         const key = conditionId;
-        
+
         if (!this.store.positions[key]) {
             // New position
             this.store.positions[key] = {
@@ -232,6 +234,7 @@ class PositionTracker {
                 conditionId,
                 market,
                 outcome,
+                eventSlug,
                 openedAt: Date.now(),
                 initialSize: size,
                 initialValue: value,
@@ -418,6 +421,10 @@ class PositionTracker {
      */
     public getPosition(conditionId: string): TrackedPosition | undefined {
         return this.store.positions[conditionId];
+    }
+
+    public getPositionByAsset(asset: string): TrackedPosition | undefined {
+        return Object.values(this.store.positions).find(p => p.asset === asset);
     }
 
     /**

@@ -205,20 +205,23 @@ class Logger {
         console.log(chalk.gray('               Copy the best, automate success\n'));
 
         console.log(chalk.cyan('━'.repeat(70)));
-        console.log(chalk.cyan('📊 Tracking Traders:'));
-        traders.forEach((address, index) => {
+        console.log(chalk.cyan(`📊 Traders suivis: ${chalk.yellow.bold(`${traders.length} adresse(s)`)}`));
+        // Afficher seulement les 3 premières adresses
+        const maxShow = 3;
+        traders.slice(0, maxShow).forEach((address, index) => {
             console.log(chalk.gray(`   ${index + 1}. ${address}`));
         });
+        if (traders.length > maxShow) {
+            console.log(chalk.gray(`   ... et ${traders.length - maxShow} autre(s)`));
+        }
         console.log(chalk.cyan(`\n💼 Your Wallet:`));
         console.log(chalk.gray(`   ${this.maskAddress(myWallet)}\n`));
     }
 
     static dbConnection(traders: string[], counts: number[]) {
+        const total = counts.reduce((sum, c) => sum + c, 0);
         console.log('\n' + chalk.cyan('📦 Database Status:'));
-        traders.forEach((address, index) => {
-            const countStr = chalk.yellow(`${counts[index]} trades`);
-            console.log(chalk.gray(`   ${this.formatAddress(address)}: ${countStr}`));
-        });
+        console.log(chalk.gray(`   ${traders.length} trader(s) — ${chalk.yellow(`${total.toLocaleString()} trades`)} au total`));
         console.log('');
     }
 
@@ -335,31 +338,6 @@ class Logger {
             }
 
             console.log(chalk.gray(`   ${this.formatAddress(address)}: ${countStr}${profitStr}`));
-
-            // Show position details if available
-            if (positionDetails && positionDetails[index] && positionDetails[index].length > 0) {
-                positionDetails[index].forEach((pos: any) => {
-                    const pnlColor = pos.percentPnl >= 0 ? chalk.green : chalk.red;
-                    const pnlSign = pos.percentPnl >= 0 ? '+' : '';
-                    const avgPrice = pos.avgPrice || 0;
-                    const curPrice = pos.curPrice || 0;
-                    console.log(
-                        chalk.gray(
-                            `      • ${pos.outcome} - ${pos.title.slice(0, 40)}${pos.title.length > 40 ? '...' : ''}`
-                        )
-                    );
-                    console.log(
-                        chalk.gray(
-                            `        Value: ${chalk.cyan(`$${pos.currentValue.toFixed(2)}`)} | PnL: ${pnlColor(`${pnlSign}${pos.percentPnl.toFixed(1)}%`)}`
-                        )
-                    );
-                    console.log(
-                        chalk.gray(
-                            `        Bought @ ${chalk.yellow(`${(avgPrice * 100).toFixed(1)}¢`)} | Current @ ${chalk.yellow(`${(curPrice * 100).toFixed(1)}¢`)}`
-                        )
-                    );
-                });
-            }
         });
         console.log('');
     }

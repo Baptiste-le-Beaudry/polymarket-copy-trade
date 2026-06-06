@@ -1,5 +1,12 @@
 import axios, { AxiosError } from 'axios';
+import * as http from 'http';
+import * as https from 'https';
 import { ENV } from '../config/env';
+
+// Keep-alive agents : réutilise les connexions TCP au lieu d'en ouvrir une nouvelle par requête
+// Gain : ~20-50ms par appel HTTP (supprime le TCP handshake + TLS negociation)
+const httpAgent  = new http.Agent ({ keepAlive: true, keepAliveMsecs: 10_000 });
+const httpsAgent = new https.Agent({ keepAlive: true, keepAliveMsecs: 10_000 });
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -33,6 +40,9 @@ const fetchData = async (url: string) => {
                 },
                 // Force IPv4 to avoid IPv6 connectivity issues
                 family: 4,
+                // Réutilise les connexions TCP existantes (keep-alive)
+                httpAgent,
+                httpsAgent,
             });
             return response.data;
         } catch (error) {

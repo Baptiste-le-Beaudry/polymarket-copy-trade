@@ -63,6 +63,32 @@ interface SimulationPosition {
     market?: string;
 }
 
+/**
+ * Fallback prix via gamma-api quand le CLOB a un spread extrême (marché illiquide).
+ * Retourne le outcomePrices[0] (prix du token YES/NO selon l'index).
+ */
+async function fetchGammaPrice(tokenId: string): Promise<number | null> {
+    try {
+        const markets = await fetchData(
+            `https://gamma-api.polymarket.com/markets?clob_token_ids=${tokenId}`
+        ) as Array<{ outcomePrices?: string; clobTokenIds?: string; closed?: boolean; active?: boolean }>;
+
+        if (!Array.isArray(markets) || markets.length === 0) return null;
+        const market = markets[0];
+        if (!market.outcomePrices || !market.clobTokenIds) return null;
+
+        const prices = JSON.parse(market.outcomePrices) as string[];
+        const tokenIds = JSON.parse(market.clobTokenIds) as string[];
+        const idx = tokenIds.indexOf(tokenId);
+        const price = parseFloat(prices[idx !== -1 ? idx : 0]);
+
+        if (!isFinite(price) || price <= 0) return null;
+        return price;
+    } catch {
+        return null;
+    }
+}
+
 class SimulationBalanceTracker {
     private balance: number;
     private positions: Map<string, SimulationPosition>;
@@ -229,8 +255,22 @@ class SimulationBalanceTracker {
                         const bid = parseFloat(data.bids[0].price);
                         const ask = parseFloat(data.asks[0].price);
                         if (bid > 0 && ask > 0 && isFinite(bid) && isFinite(ask)) {
+                            // Spread > 0.80 = marché illiquide — essayer gamma-api comme fallback
+                            if ((ask - bid) > 0.80) {
+                                const gammaPrice = await fetchGammaPrice(asset);
+                                if (gammaPrice !== null) {
+                                    return { asset, midpoint: gammaPrice };
+                                }
+                                this.markToMarketPrices.delete(asset);
+                                throw new Error('Spread trop large — marché illiquide ou résolu');
+                            }
                             return { asset, midpoint: (bid + ask) / 2 };
                         }
+                    }
+                    // Fallback gamma-api si CLOB ne répond pas
+                    const gammaPrice = await fetchGammaPrice(asset);
+                    if (gammaPrice !== null) {
+                        return { asset, midpoint: gammaPrice };
                     }
                     throw new Error('No valid bid/ask');
                 })
@@ -238,9 +278,32 @@ class SimulationBalanceTracker {
 
             for (const result of batchResults) {
                 if (result.status === 'fulfilled') {
-                    this.markToMarketPrices.set(result.value.asset, result.value.midpoint);
-                    this.lastKnownPrices.set(result.value.asset, result.value.midpoint);
+                    const { asset, midpoint } = result.value;
+                    this.markToMarketPrices.set(asset, midpoint);
+                    this.lastKnownPrices.set(asset, midpoint);
                     updated++;
+
+                    // ── AUTO-SELL : marché quasi-résolu YES ────────────────────
+                    // Si le prix MtM atteint ≥ 0.995, le marché est pratiquement
+                    // résolu YES et va bientôt fermer. On vend immédiatement pour
+                    // encaisser le gain plutôt que d'attendre la résolution officielle.
+                    // Seuil 0.995 : évite de vendre des positions achetées à $0.99
+                    // qui oscillent légèrement (celles-là restent sous 0.994 en MtM).
+                    const AUTO_SELL_THRESHOLD = 0.990;
+                    const position = this.positions.get(asset);
+                    if (position && midpoint >= AUTO_SELL_THRESHOLD) {
+                        Logger.separator();
+                        Logger.success(
+                            `💰 AUTO-SELL: ${asset.substring(0, 12)}... @ $${midpoint.toFixed(4)} ` +
+                            `(≥ ${AUTO_SELL_THRESHOLD}) — marché quasi-résolu YES`
+                        );
+                        try {
+                            await this.sell(asset, position.size, midpoint);
+                        } catch (err) {
+                            Logger.error(`Auto-sell failed: ${(err as Error).message}`);
+                        }
+                        Logger.separator();
+                    }
                 } else {
                     failed++;
                     // Keep lastKnownPrices unchanged — will be used as fallback
@@ -282,6 +345,10 @@ class SimulationBalanceTracker {
         };
 
         this.balanceHistory.push(snapshot);
+        // Cap à 2000 entrées pour éviter une fuite mémoire sur les sessions longues
+        if (this.balanceHistory.length > 2000) {
+            this.balanceHistory = this.balanceHistory.slice(-2000);
+        }
     }
 
     /**
@@ -379,6 +446,9 @@ class SimulationBalanceTracker {
             this.positions.delete(asset);
             // No longer restored — allow re-buying if traders enter again
             this.restoredAssets.delete(asset);
+            // Nettoyer les maps de prix pour éviter la fuite mémoire
+            this.markToMarketPrices.delete(asset);
+            this.lastKnownPrices.delete(asset);
         }
 
         Logger.success(`✓ [VIRTUAL] Sold ${tokens.toFixed(2)} tokens @ $${price.toFixed(4)} = $${usdAmount.toFixed(2)} -${gasFeeUSD.toFixed(4)} gas`);
@@ -525,6 +595,9 @@ class SimulationBalanceTracker {
             this.positions.delete(asset);
             // No longer restored — allow re-buying if traders enter again
             this.restoredAssets.delete(asset);
+            // Nettoyer les maps de prix pour éviter la fuite mémoire
+            this.markToMarketPrices.delete(asset);
+            this.lastKnownPrices.delete(asset);
         }
 
         const slippageVsTrader = ((avgPrice - traderPrice) / traderPrice) * 100;
@@ -609,6 +682,13 @@ class SimulationBalanceTracker {
         Logger.info(`💰 Starting Balance: $${this.startingBalance.toFixed(2)}`);
         Logger.info(`💵 Current Cash:     $${this.balance.toFixed(2)}`);
         Logger.info(`📊 Open Positions:   ${this.positions.size}`);
+        try {
+            const { getPendingLimitOrdersCount } = require('./simulationExecutor');
+            const pendingCount = getPendingLimitOrdersCount();
+            if (pendingCount > 0) {
+                Logger.info(`⏳ Limit Orders:     ${pendingCount} en attente (book vide, surveillance 5min)`);
+            }
+        } catch { /* ignore */ }
         
         const totalInvested = this.startingBalance - this.balance;
         if (totalInvested > 0) {
@@ -617,41 +697,45 @@ class SimulationBalanceTracker {
         Logger.info(`💸 Total Fees Paid:  $${this.totalFeesPaid.toFixed(2)} (gas + slippage)`);
 
         if (this.positions.size > 0) {
-            const hasMtM = this.markToMarketPrices.size > 0;
-            Logger.info(`\n📦 Virtual Positions (${hasMtM ? 'mark-to-market' : 'entry price'}):`);
+            Logger.info(`\n📦 Virtual Positions:`);
 
             let totalEntryValue = 0;
             let totalCurrentValue = 0;
 
             for (const [asset, position] of this.positions.entries()) {
                 const entryValue = position.size * position.avgPrice;
-                const currentPrice = this.markToMarketPrices.get(asset) ?? this.lastKnownPrices.get(asset) ?? position.avgPrice;
+                const livePrice = this.markToMarketPrices.get(asset);
+                const lastPrice = this.lastKnownPrices.get(asset);
+                const currentPrice = livePrice ?? lastPrice ?? position.avgPrice;
+                const priceSource = livePrice != null ? '📡' : lastPrice != null ? '⏱' : '📌';
                 const currentValue = position.size * currentPrice;
                 const pnl = currentValue - entryValue;
                 const pnlPct = position.avgPrice > 0 ? ((currentPrice - position.avgPrice) / position.avgPrice) * 100 : 0;
                 totalEntryValue += entryValue;
                 totalCurrentValue += currentValue;
 
-                const pnlStr = hasMtM
-                    ? ` | P&L: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%) @ $${currentPrice.toFixed(4)}`
-                    : '';
+                const pnlStr = ` | ${priceSource} $${currentPrice.toFixed(4)} | P&L: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)`;
+                // Récupère le lien Polymarket depuis le positionTracker si disponible
+                const posTracker = require('./positionTracker').getPositionTracker();
+                const trackedPos = posTracker.getPositionByAsset ? posTracker.getPositionByAsset(asset) : undefined;
+                const eventSlug = trackedPos?.eventSlug;
+                const marketLink = eventSlug
+                    ? `https://polymarket.com/event/${eventSlug}`
+                    : null;
                 const market = position.market ? position.market.substring(0, 35) : asset.substring(0, 12) + '...';
                 Logger.info(
-                    `   • ${market} | ${position.size.toFixed(2)} tokens @ $${position.avgPrice.toFixed(4)} entry = $${entryValue.toFixed(2)}${pnlStr}`
+                    `   • ${market} | ${position.size.toFixed(2)} tokens @ $${position.avgPrice.toFixed(4)} entry = $${entryValue.toFixed(2)}${pnlStr}${marketLink ? `\n     🔗 ${marketLink}` : ''}`
                 );
             }
 
-            if (hasMtM) {
-                const totalPnl = totalCurrentValue - totalEntryValue;
-                const totalPnlPct = totalEntryValue > 0 ? (totalPnl / totalEntryValue) * 100 : 0;
-                Logger.info(
-                    `   ────────────────────────────────────────────────────────`
-                );
-                Logger.info(
-                    `   📊 Positions total: $${totalEntryValue.toFixed(2)} invested → $${totalCurrentValue.toFixed(2)} current | ` +
-                    `P&L: ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)} (${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(1)}%)`
-                );
-            }
+            const totalPnl = totalCurrentValue - totalEntryValue;
+            const totalPnlPct = totalEntryValue > 0 ? (totalPnl / totalEntryValue) * 100 : 0;
+            Logger.info(`   ────────────────────────────────────────────────────────`);
+            Logger.info(
+                `   📊 Total: $${totalEntryValue.toFixed(2)} investi → $${totalCurrentValue.toFixed(2)} actuel | ` +
+                `P&L: ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)} (${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(1)}%)`
+            );
+            Logger.info(`   📡 live  ⏱ last known  📌 entry price (fallback)`);
         }
 
         // Trader statistics
@@ -1133,10 +1217,9 @@ class SimulationBalanceTracker {
         report += 'END OF REPORT\n';
         report += '='.repeat(80) + '\n';
         
-        // Write to file (overwrites existing)
+        // Write to file (overwrites existing — silently, appelé toutes les 5 min)
         try {
             fs.writeFileSync(reportPath, report, 'utf-8');
-            Logger.success(`📄 Text report saved: ${reportPath}`);
         } catch (error) {
             Logger.error(`Failed to write text report: ${error instanceof Error ? error.message : String(error)}`);
         }

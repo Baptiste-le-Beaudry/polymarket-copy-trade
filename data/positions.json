@@ -1,2547 +1,273 @@
 {
   "positions": {
-    "0xcad388a016c4ccb9a4bc07549f802d60675d9a5ebb7b0e221cf2efef5f067e16": {
-      "asset": "113350885464808674951991697099053010367047110695236183898915618148180735012616",
-      "conditionId": "0xcad388a016c4ccb9a4bc07549f802d60675d9a5ebb7b0e221cf2efef5f067e16",
-      "market": "EdgeX FDV above $2B one day after launch?",
+    "0x02f8dd15d4c674a75fccbd0e00f0cf1256101c45ef41f6d0c5dfde9c36d4141e": {
+      "asset": "22927363175825625095832888773253962860881299963299337794235022401608169522396",
+      "conditionId": "0x02f8dd15d4c674a75fccbd0e00f0cf1256101c45ef41f6d0c5dfde9c36d4141e",
+      "market": "Israel x Hezbollah Ceasefire extended by April 26, 2026?",
       "outcome": "No",
-      "openedAt": 1769620388607,
-      "initialSize": 21.73913043478261,
-      "initialValue": 15,
-      "currentSize": 86.95652171031821,
-      "currentValue": 60,
-      "lastUpdated": 1769620389354,
-      "trader": "0x75e765216a57942d738d880ffcda854d9f869080",
+      "eventSlug": "israel-x-hezbollah-ceasefire-extended-by",
+      "openedAt": 1777312825546,
+      "initialSize": 11.764705882352942,
+      "initialValue": 10,
+      "currentSize": 23.529411764705884,
+      "currentValue": 20,
+      "lastUpdated": 1777312825548,
+      "trader": "0x215adbb63b47d0ca92f849fe2c2dc1adb0f6254c",
       "trades": [
         {
-          "timestamp": 1769620388609,
+          "timestamp": 1777312825546,
           "side": "BUY",
-          "size": 21.73913043478261,
-          "price": 0.69,
-          "value": 15,
-          "trader": "0x75e765216a57942d738d880ffcda854d9f869080"
-        },
-        {
-          "timestamp": 1769620388970,
-          "side": "BUY",
-          "size": 21.73913043478261,
-          "price": 0.69,
-          "value": 15,
-          "trader": "0x75e765216a57942d738d880ffcda854d9f869080"
-        },
-        {
-          "timestamp": 1769620389354,
-          "side": "BUY",
-          "size": 21.739130405970386,
-          "price": 0.6900000009145,
-          "value": 15,
-          "trader": "0x75e765216a57942d738d880ffcda854d9f869080"
+          "size": 11.764705882352942,
+          "price": 0.85,
+          "value": 10,
+          "trader": "0x215adbb63b47d0ca92f849fe2c2dc1adb0f6254c"
         }
       ]
     },
-    "0x23fd2b26c4e095465ba0d2ebce8d5eda57009ddc59aad8b68ab19ca968b41eed": {
-      "asset": "34465433013244737261777301958314575283534514587255327061285941306189159190135",
-      "conditionId": "0x23fd2b26c4e095465ba0d2ebce8d5eda57009ddc59aad8b68ab19ca968b41eed",
-      "market": "Israel strikes Iran by January 31, 2026?",
+    "0x74cbb97f087d33c1812ffc1707b7ba8d6663031f60998e4a137a5d2940f5debf": {
+      "asset": "90018004083295383709985505774318619454774621134335309635909619328044622047253",
+      "conditionId": "0x74cbb97f087d33c1812ffc1707b7ba8d6663031f60998e4a137a5d2940f5debf",
+      "market": "Tim Walz in jail by December 31?",
       "outcome": "No",
-      "openedAt": 1769620399625,
-      "initialSize": 16.304347826086957,
-      "initialValue": 15,
-      "currentSize": 16.304347826086968,
-      "currentValue": 75,
-      "lastUpdated": 1769620421698,
+      "eventSlug": "tim-walz-in-jail-by-march-31",
+      "openedAt": 1777376421515,
+      "initialSize": 10.638297872340425,
+      "initialValue": 10,
+      "currentSize": 21.27659574468085,
+      "currentValue": 20,
+      "lastUpdated": 1777376421516,
       "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
       "trades": [
         {
-          "timestamp": 1769620399626,
+          "timestamp": 1777376421515,
           "side": "BUY",
-          "size": 16.304347826086957,
-          "price": 0.92,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620400761,
-          "side": "BUY",
-          "size": 16.304347826086957,
-          "price": 0.92,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620420712,
-          "side": "BUY",
-          "size": 16.483516483516482,
-          "price": 0.91,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620421034,
-          "side": "BUY",
-          "size": 16.483516483516482,
-          "price": 0.91,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620421698,
-          "side": "SELL",
-          "size": 65.57572861920687,
+          "size": 10.638297872340425,
           "price": 0.94,
-          "value": 61.641184902054455
+          "value": 10,
+          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
         }
       ]
     },
-    "0xd6ea801f468ac357fa3c32d2ceeeb863a0fcb0e44ef66082558c69fb803116c2": {
-      "asset": "52227664856253617768702799700540822280586436368991966458313458003465698837270",
-      "conditionId": "0xd6ea801f468ac357fa3c32d2ceeeb863a0fcb0e44ef66082558c69fb803116c2",
-      "market": "Will Giannis Antetokounmpo not be traded?",
-      "outcome": "No",
-      "openedAt": 1769620409015,
-      "initialSize": 34.883720930232556,
-      "initialValue": 15,
-      "currentSize": 69.76744186046511,
-      "currentValue": 30,
-      "lastUpdated": 1769620409017,
+    "0x3dbeee81527f6d4868a6e500fca15d8905a6dda0e9b1f525145a4ad813bac98e": {
+      "asset": "114124908308155690607429928412375081987315496557547618359166831545915027210442",
+      "conditionId": "0x3dbeee81527f6d4868a6e500fca15d8905a6dda0e9b1f525145a4ad813bac98e",
+      "market": "Will SpaceX IPO by June 30, 2026?",
+      "outcome": "Yes",
+      "eventSlug": "spacex-ipo-by",
+      "openedAt": 1777376423800,
+      "initialSize": 10.869565217391305,
+      "initialValue": 10,
+      "currentSize": 21.73913043478261,
+      "currentValue": 20,
+      "lastUpdated": 1777376423801,
       "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
       "trades": [
         {
-          "timestamp": 1769620409017,
+          "timestamp": 1777376423801,
           "side": "BUY",
-          "size": 34.883720930232556,
+          "size": 10.869565217391305,
+          "price": 0.92,
+          "value": 10,
+          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
+        }
+      ]
+    },
+    "0x348cd9adf4f6855f58bd9c6dbf9ff251c4142ef77233a5dc95c65b4b61cd2187": {
+      "asset": "77669758102929718590160851391714019116736856202333459817343190730743895177270",
+      "conditionId": "0x348cd9adf4f6855f58bd9c6dbf9ff251c4142ef77233a5dc95c65b4b61cd2187",
+      "market": "Strait of Hormuz traffic returns to normal by end of June?",
+      "outcome": "No",
+      "eventSlug": "strait-of-hormuz-traffic-returns-to-normal-by-end-of-june",
+      "openedAt": 1777376425627,
+      "initialSize": 23.25581395348837,
+      "initialValue": 10,
+      "currentSize": 23.25581395348837,
+      "currentValue": 20,
+      "lastUpdated": 1777824217824,
+      "trader": "0x215adbb63b47d0ca92f849fe2c2dc1adb0f6254c",
+      "trades": [
+        {
+          "timestamp": 1777376425627,
+          "side": "BUY",
+          "size": 23.25581395348837,
           "price": 0.43,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
+          "value": 10,
+          "trader": "0x215adbb63b47d0ca92f849fe2c2dc1adb0f6254c"
+        },
+        {
+          "timestamp": 1777824217807,
+          "side": "SELL",
+          "size": 23.25581395348837,
+          "price": 0.48999999529575045,
+          "value": 11.39534872780815
         }
       ]
     },
-    "0x3488f31e6449f9803f99a8b5dd232c7ad883637f1c86e6953305a2ef19c77f20": {
-      "asset": "10832696757358093775468120009000761778513405247768868107262967513475277652998",
-      "conditionId": "0x3488f31e6449f9803f99a8b5dd232c7ad883637f1c86e6953305a2ef19c77f20",
-      "market": "US strikes Iran by February 28, 2026?",
-      "outcome": "No",
-      "openedAt": 1769620409692,
-      "initialSize": 28.30188679245283,
-      "initialValue": 15,
-      "currentSize": 28.301886792452876,
-      "currentValue": 165,
-      "lastUpdated": 1769695603454,
-      "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
-      "trades": [
-        {
-          "timestamp": 1769620409694,
-          "side": "BUY",
-          "size": 28.30188679245283,
-          "price": 0.53,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620410284,
-          "side": "BUY",
-          "size": 28.30188679245283,
-          "price": 0.53,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620410629,
-          "side": "BUY",
-          "size": 28.301885202918847,
-          "price": 0.5300000297666747,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620411343,
-          "side": "BUY",
-          "size": 28.30188026699561,
-          "price": 0.5300001222000904,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620411701,
-          "side": "BUY",
-          "size": 28.301886412181602,
-          "price": 0.5300000071212126,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620412321,
-          "side": "BUY",
-          "size": 28.301885715729842,
-          "price": 0.5300000201634333,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620412665,
-          "side": "BUY",
-          "size": 28.30188679245283,
-          "price": 0.53,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620413001,
-          "side": "BUY",
-          "size": 28.30188679245283,
-          "price": 0.53,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620414059,
-          "side": "BUY",
-          "size": 27.777777777777775,
-          "price": 0.54,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769627711590,
-          "side": "SELL",
-          "size": 1.56877,
-          "price": 0.5699994263021348,
-          "value": 0.894198
-        },
-        {
-          "timestamp": 1769627842025,
-          "side": "SELL",
-          "size": 87.719297,
-          "price": 0.5699999966939999,
-          "value": 49.999998999999995
-        },
-        {
-          "timestamp": 1769630303242,
-          "side": "BUY",
-          "size": 28.30188679245283,
-          "price": 0.53,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769695603454,
-          "side": "SELL",
-          "size": 193.2066823378678,
-          "price": 0.53,
-          "value": 102.39954163906994
-        }
-      ]
-    },
-    "0xabb86b080e9858dcb3f46954010e49b6f539c20036856c7f999395bfd58d01e6": {
-      "asset": "13294549611854156060952327202052855585194847446707854951585060180328600525494",
-      "conditionId": "0xabb86b080e9858dcb3f46954010e49b6f539c20036856c7f999395bfd58d01e6",
-      "market": "US strikes Iran by January 31, 2026?",
-      "outcome": "No",
-      "openedAt": 1769620413342,
-      "initialSize": 16.853932584269664,
-      "initialValue": 15,
-      "currentSize": 16.853932584269664,
-      "currentValue": 45,
-      "lastUpdated": 1769632228914,
-      "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
-      "trades": [
-        {
-          "timestamp": 1769620413343,
-          "side": "BUY",
-          "size": 16.853932584269664,
-          "price": 0.89,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769627058987,
-          "side": "BUY",
-          "size": 16.853932584269664,
-          "price": 0.89,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769632228914,
-          "side": "SELL",
-          "size": 33.70786516853933,
-          "price": 0.9,
-          "value": 30.337078651685395
-        }
-      ]
-    },
-    "0x46d40e851b24d9b0af4bc1942ccd86439cae82a9011767da14950df0ad997adf": {
-      "asset": "20939351535690701474621316837957321939118947084394902825750156021315806001424",
-      "conditionId": "0x46d40e851b24d9b0af4bc1942ccd86439cae82a9011767da14950df0ad997adf",
-      "market": "Will Trump nominate Judy Shelton as the next Fed chair?",
-      "outcome": "No",
-      "openedAt": 1769620414417,
-      "initialSize": 15.77287066067879,
-      "initialValue": 15,
-      "currentSize": 63.09148264627871,
-      "currentValue": 60,
-      "lastUpdated": 1769620415097,
-      "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
-      "trades": [
-        {
-          "timestamp": 1769620414418,
-          "side": "BUY",
-          "size": 15.77287066067879,
-          "price": 0.9510000001074295,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620414745,
-          "side": "BUY",
-          "size": 15.77287066246057,
-          "price": 0.951,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620415097,
-          "side": "BUY",
-          "size": 15.77287066246057,
-          "price": 0.951,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        }
-      ]
-    },
-    "0x124030560ccc656a379a7eadf65fa8cf0a44120cbc3e80eaba7f8e65195e674c": {
-      "asset": "51455133595847069925219299495281207055285277688809578229144966243821752238755",
-      "conditionId": "0x124030560ccc656a379a7eadf65fa8cf0a44120cbc3e80eaba7f8e65195e674c",
-      "market": "Weed rescheduled by March 31?",
-      "outcome": "No",
-      "openedAt": 1769620419122,
-      "initialSize": 16.666666666666668,
-      "initialValue": 15,
-      "currentSize": 16.666666666666664,
-      "currentValue": 45,
-      "lastUpdated": 1769667466372,
-      "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
-      "trades": [
-        {
-          "timestamp": 1769620419123,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769626534806,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769667386448,
-          "side": "SELL",
-          "size": 5,
-          "price": 0.93,
-          "value": 4.65
-        },
-        {
-          "timestamp": 1769667387534,
-          "side": "SELL",
-          "size": 1.451611,
-          "price": 0.9299998415553478,
-          "value": 1.3499979999999998
-        },
-        {
-          "timestamp": 1769667387922,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667392373,
-          "side": "SELL",
-          "size": 0.230536,
-          "price": 0.9299979178956865,
-          "value": 0.21439799999999998
-        },
-        {
-          "timestamp": 1769667456416,
-          "side": "SELL",
-          "size": 2.419353,
-          "price": 0.9299998801332422,
-          "value": 2.249998
-        },
-        {
-          "timestamp": 1769667457529,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667458273,
-          "side": "SELL",
-          "size": 5,
-          "price": 0.93,
-          "value": 4.65
-        },
-        {
-          "timestamp": 1769667459024,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667459368,
-          "side": "SELL",
-          "size": 1.301074,
-          "price": 0.9299993697514515,
-          "value": 1.2099980000000001
-        },
-        {
-          "timestamp": 1769667459718,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667460073,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667461599,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667462690,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667463036,
-          "side": "SELL",
-          "size": 5.32,
-          "price": 0.93,
-          "value": 4.9476
-        },
-        {
-          "timestamp": 1769667464470,
-          "side": "SELL",
-          "size": 1.150536,
-          "price": 0.9299995828031457,
-          "value": 1.069998
-        },
-        {
-          "timestamp": 1769667465255,
-          "side": "SELL",
-          "size": 1.602149,
-          "price": 0.9299996442278464,
-          "value": 1.489998
-        },
-        {
-          "timestamp": 1769667465652,
-          "side": "SELL",
-          "size": 1.451611,
-          "price": 0.9299998415553478,
-          "value": 1.3499979999999998
-        },
-        {
-          "timestamp": 1769667466372,
-          "side": "SELL",
-          "size": 0.35271133333333315,
-          "price": 0.9299995828031457,
-          "value": 0.3280213928499411
-        }
-      ]
-    },
-    "0xd4bbf7f6707c67beb736135ad32a41f6db41f8ae52d3ac4919650de9eeb94ed8": {
-      "asset": "37975265083682450969967223199653164268542375291978582835346444673615244164455",
-      "conditionId": "0xd4bbf7f6707c67beb736135ad32a41f6db41f8ae52d3ac4919650de9eeb94ed8",
-      "market": "Khamenei out as Supreme Leader of Iran by February 28?",
-      "outcome": "No",
-      "openedAt": 1769620424236,
-      "initialSize": 18.51851851851852,
-      "initialValue": 15,
-      "currentSize": 222.2222203331223,
-      "currentValue": 180,
-      "lastUpdated": 1769620429945,
-      "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
-      "trades": [
-        {
-          "timestamp": 1769620424237,
-          "side": "BUY",
-          "size": 18.51851851851852,
-          "price": 0.81,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620424571,
-          "side": "BUY",
-          "size": 18.51851775834474,
-          "price": 0.8100000332500025,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620424914,
-          "side": "BUY",
-          "size": 18.518517893004102,
-          "price": 0.8100000273600015,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620425247,
-          "side": "BUY",
-          "size": 18.51851851851852,
-          "price": 0.81,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620426411,
-          "side": "BUY",
-          "size": 18.51851851851852,
-          "price": 0.81,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620426779,
-          "side": "BUY",
-          "size": 18.51851851851852,
-          "price": 0.81,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620427122,
-          "side": "BUY",
-          "size": 18.518518409814995,
-          "price": 0.8100000047546921,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620427459,
-          "side": "BUY",
-          "size": 18.518518446844993,
-          "price": 0.810000003135,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620428412,
-          "side": "BUY",
-          "size": 18.518518381997517,
-          "price": 0.8100000059714286,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620429611,
-          "side": "BUY",
-          "size": 18.518518393029517,
-          "price": 0.810000005488889,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769620429945,
-          "side": "BUY",
-          "size": 18.518518457493805,
-          "price": 0.810000002669221,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        }
-      ]
-    },
-    "0x912b74ff4b4a48f0f774ee891f5019339d739cd398c74b087c32264be4f4ceb4": {
-      "asset": "62291188880564173290027548287459028940011322252550456296185425052089132754633",
-      "conditionId": "0x912b74ff4b4a48f0f774ee891f5019339d739cd398c74b087c32264be4f4ceb4",
-      "market": "Will the US strike Somalia next?",
+    "0xf480b4ea858af172baf1d8c4d2d0281ee8d2694ed9f40b12b3630c5328dfb3f6": {
+      "asset": "92772662362278961564503892441528169295723683486682937846804974953615046185185",
+      "conditionId": "0xf480b4ea858af172baf1d8c4d2d0281ee8d2694ed9f40b12b3630c5328dfb3f6",
+      "market": "Will the All India Trinamool Congress (AITC) win the most seats in the 2026 West Bengal Legislative Assembly election?",
       "outcome": "Yes",
-      "openedAt": 1769620432185,
-      "initialSize": 15.608740894901144,
-      "initialValue": 15,
-      "currentSize": 15.608740894901132,
-      "currentValue": 285,
-      "lastUpdated": 1769668633811,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+      "eventSlug": "west-bengal-legislative-assembly-election-winner",
+      "openedAt": 1777376427139,
+      "initialSize": 17.6678445229682,
+      "initialValue": 10,
+      "currentSize": 17.6678445229682,
+      "currentValue": 20,
+      "lastUpdated": 1777531695977,
+      "trader": "0x7be42b643002a97434f4666ea145784bc7798477",
       "trades": [
         {
-          "timestamp": 1769620432186,
+          "timestamp": 1777376427139,
           "side": "BUY",
-          "size": 15.608740894901144,
-          "price": 0.961,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
+          "size": 17.6678445229682,
+          "price": 0.566,
+          "value": 10,
+          "trader": "0x7be42b643002a97434f4666ea145784bc7798477"
         },
         {
-          "timestamp": 1769620437319,
-          "side": "BUY",
-          "size": 15.626454025763644,
-          "price": 0.9599106729696452,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620437780,
-          "side": "BUY",
-          "size": 16.129025495380017,
-          "price": 0.9300003899365518,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620438402,
-          "side": "BUY",
-          "size": 15.957446808510639,
-          "price": 0.94,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620438768,
-          "side": "BUY",
-          "size": 15.756302521008404,
-          "price": 0.952,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620448742,
-          "side": "BUY",
-          "size": 15.634519235746145,
-          "price": 0.9594154942548277,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620450281,
-          "side": "BUY",
-          "size": 16.483516470131672,
-          "price": 0.9100000007389307,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620451331,
-          "side": "BUY",
-          "size": 16.48351641140984,
-          "price": 0.9100000039807674,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620454853,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620455204,
-          "side": "BUY",
-          "size": 16.399237452717976,
-          "price": 0.9146766758666531,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620455552,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620456500,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620456843,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620457191,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620457556,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620457911,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620458257,
-          "side": "BUY",
-          "size": 16.79329194848513,
-          "price": 0.8932137931034483,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620458611,
-          "side": "BUY",
-          "size": 17.73109199397215,
-          "price": 0.8459715851172274,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769668633811,
+          "timestamp": 1777531695976,
           "side": "SELL",
-          "size": 291.5063690644784,
-          "price": 0.989,
-          "value": 288.2997990047691
+          "size": 17.6678445229682,
+          "price": 0.52,
+          "value": 9.187279151943464
         }
       ]
     },
-    "0x12d1b41c90a2ff07173ab2469aad97fb9e80f781b36c32f99fbf4ae28a28b42a": {
-      "asset": "22835304185425644675451740820217338241663141495608098477495460677942947224804",
-      "conditionId": "0x12d1b41c90a2ff07173ab2469aad97fb9e80f781b36c32f99fbf4ae28a28b42a",
-      "market": "Will Trump talk to Emmanuel Macron in January?",
-      "outcome": "No",
-      "openedAt": 1769620434896,
-      "initialSize": 714.2857142857142,
-      "initialValue": 15,
-      "currentSize": 808.0357142538392,
-      "currentValue": 105,
-      "lastUpdated": 1769706172249,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+    "0x8b369e10358094a99ffe7f85a81a8e8ca68c611eee0fe63a2efa790ad045bcd6": {
+      "asset": "926377706175971731068420551849041218012736398250875962020506643091812084572",
+      "conditionId": "0x8b369e10358094a99ffe7f85a81a8e8ca68c611eee0fe63a2efa790ad045bcd6",
+      "market": "Will Donald Trump announce that the United States blockade of the Strait of Hormuz has been lifted by May 31, 2026?",
+      "outcome": "Yes",
+      "eventSlug": "trump-announces-us-blockade-of-hormuz-lifted-by",
+      "openedAt": 1777376431627,
+      "initialSize": 13.513513513513514,
+      "initialValue": 10,
+      "currentSize": 13.513513513513514,
+      "currentValue": 20,
+      "lastUpdated": 1777401834472,
+      "trader": "0x215adbb63b47d0ca92f849fe2c2dc1adb0f6254c",
       "trades": [
         {
-          "timestamp": 1769620434898,
+          "timestamp": 1777376431627,
           "side": "BUY",
-          "size": 714.2857142857142,
-          "price": 0.021,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
+          "size": 13.513513513513514,
+          "price": 0.74,
+          "value": 10,
+          "trader": "0x215adbb63b47d0ca92f849fe2c2dc1adb0f6254c"
         },
         {
-          "timestamp": 1769620441267,
+          "timestamp": 1777399308274,
           "side": "SELL",
-          "size": 10,
-          "price": 0.1,
-          "value": 1
+          "size": 7.773332,
+          "price": 0.5999999742710076,
+          "value": 4.663999
         },
         {
-          "timestamp": 1769620441603,
+          "timestamp": 1777401834471,
           "side": "SELL",
-          "size": 10,
-          "price": 0.1,
-          "value": 1
-        },
-        {
-          "timestamp": 1769620442206,
-          "side": "BUY",
-          "size": 16.483516483516482,
-          "price": 0.91,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620442813,
-          "side": "SELL",
-          "size": 10,
-          "price": 0.1,
-          "value": 1
-        },
-        {
-          "timestamp": 1769620443258,
-          "side": "SELL",
-          "size": 10,
-          "price": 0.1,
-          "value": 1
-        },
-        {
-          "timestamp": 1769620443587,
-          "side": "SELL",
-          "size": 100,
-          "price": 0.1,
-          "value": 10
-        },
-        {
-          "timestamp": 1769620444090,
-          "side": "SELL",
-          "size": 10,
-          "price": 0.1,
-          "value": 1
-        },
-        {
-          "timestamp": 1769620444432,
-          "side": "SELL",
-          "size": 564.2857142857142,
-          "price": 0.10657683486238533,
-          "value": 60.139785386631715
-        },
-        {
-          "timestamp": 1769620474609,
-          "side": "SELL",
-          "size": 3.64,
+          "size": 5.740181513513514,
           "price": 0.6,
-          "value": 2.184
-        },
-        {
-          "timestamp": 1769620475275,
-          "side": "SELL",
-          "size": 12.843516483516481,
-          "price": 0.5557686760888376,
-          "value": 7.138024152369118
-        },
-        {
-          "timestamp": 1769620495066,
-          "side": "BUY",
-          "size": 46.875,
-          "price": 0.32,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769620495901,
-          "side": "BUY",
-          "size": 46.874999968125,
-          "price": 0.3200000002176,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769628464287,
-          "side": "BUY",
-          "size": 937.5,
-          "price": 0.016,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769628529509,
-          "side": "BUY",
-          "size": 937.5,
-          "price": 0.016,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769706172249,
-          "side": "SELL",
-          "size": 1875,
-          "price": 0.008995399681648957,
-          "value": 16.866374403091793
+          "value": 3.444108908108108
         }
       ]
     },
-    "0xf835de42f566a714be49df12ba436279ac3b06a8b570baaca49835cd0358c916": {
-      "asset": "63328417029565615965314722107877950012700459230686857824010173150766206257357",
-      "conditionId": "0xf835de42f566a714be49df12ba436279ac3b06a8b570baaca49835cd0358c916",
-      "market": "Will Khamenei leave Iran by March 31?",
+    "0x66f5b8203ee1c36b993af623fd7f9ef7271dd87b3aebf6df508048ad4b563432": {
+      "asset": "10592971839058012204379818734015951513876214421642216097933518020153836601713",
+      "conditionId": "0x66f5b8203ee1c36b993af623fd7f9ef7271dd87b3aebf6df508048ad4b563432",
+      "market": "Will OpenAI IPO by December 31 2026?",
       "outcome": "No",
-      "openedAt": 1769620436241,
-      "initialSize": 16.129032039542142,
-      "initialValue": 15,
-      "currentSize": 69.04012172251124,
-      "currentValue": 165,
-      "lastUpdated": 1769660562856,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769620436242,
-          "side": "BUY",
-          "size": 16.129032039542142,
-          "price": 0.9300000126000002,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769624642459,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769624642838,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769624681596,
-          "side": "SELL",
-          "size": 1.063828,
-          "price": 0.9399996991994947,
-          "value": 0.999998
-        },
-        {
-          "timestamp": 1769624682264,
-          "side": "SELL",
-          "size": 1.063828,
-          "price": 0.9399996991994947,
-          "value": 0.999998
-        },
-        {
-          "timestamp": 1769624682789,
-          "side": "SELL",
-          "size": 4.946807,
-          "price": 0.9399998827526523,
-          "value": 4.649997999999999
-        },
-        {
-          "timestamp": 1769624684098,
-          "side": "SELL",
-          "size": 1.063828,
-          "price": 0.9399996991994947,
-          "value": 0.999998
-        },
-        {
-          "timestamp": 1769624684480,
-          "side": "SELL",
-          "size": 1.18085,
-          "price": 0.94,
-          "value": 1.109999
-        },
-        {
-          "timestamp": 1769624684868,
-          "side": "SELL",
-          "size": 5.319147,
-          "price": 0.9399999661599877,
-          "value": 4.999998000000001
-        },
-        {
-          "timestamp": 1769624685268,
-          "side": "SELL",
-          "size": 5.319147,
-          "price": 0.9399999661599877,
-          "value": 4.999998000000001
-        },
-        {
-          "timestamp": 1769624685630,
-          "side": "SELL",
-          "size": 28.429661555671174,
-          "price": 0.94,
-          "value": 26.723881862330902
-        },
-        {
-          "timestamp": 1769624708809,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769624747349,
-          "side": "SELL",
-          "size": 1.063828,
-          "price": 0.9399996991994947,
-          "value": 0.999998
-        },
-        {
-          "timestamp": 1769624747767,
-          "side": "SELL",
-          "size": 5.319147,
-          "price": 0.9399999661599877,
-          "value": 4.999998000000001
-        },
-        {
-          "timestamp": 1769624944490,
-          "side": "BUY",
-          "size": 16.129032258064512,
-          "price": 0.9300000000000002,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769627345624,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769627579520,
-          "side": "SELL",
-          "size": 1.063828,
-          "price": 0.9399996991994947,
-          "value": 0.999998
-        },
-        {
-          "timestamp": 1769628636098,
-          "side": "SELL",
-          "size": 5.319147,
-          "price": 0.9399999661599877,
-          "value": 4.999998000000001
-        },
-        {
-          "timestamp": 1769628660818,
-          "side": "BUY",
-          "size": 16.129031153312496,
-          "price": 0.9300000637000058,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769628794137,
-          "side": "BUY",
-          "size": 16.12903183073187,
-          "price": 0.9300000246400012,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769628833966,
-          "side": "SELL",
-          "size": 7.14,
-          "price": 0.94,
-          "value": 6.711599999999999
-        },
-        {
-          "timestamp": 1769629098058,
-          "side": "SELL",
-          "size": 1.063828,
-          "price": 0.9399996991994947,
-          "value": 0.999998
-        },
-        {
-          "timestamp": 1769629098734,
-          "side": "SELL",
-          "size": 1.404254,
-          "price": 0.9399994587873703,
-          "value": 1.3199979999999998
-        },
-        {
-          "timestamp": 1769629691702,
-          "side": "SELL",
-          "size": 7.063828,
-          "price": 0.9399999546987837,
-          "value": 6.639998
-        },
-        {
-          "timestamp": 1769629902026,
-          "side": "SELL",
-          "size": 14.127658,
-          "price": 0.939999963192767,
-          "value": 13.279998
-        },
-        {
-          "timestamp": 1769629930996,
-          "side": "SELL",
-          "size": 7.06,
-          "price": 0.94,
-          "value": 6.636399999999999
-        },
-        {
-          "timestamp": 1769630500461,
-          "side": "SELL",
-          "size": 4.446807,
-          "price": 0.9399998695693337,
-          "value": 4.179997999999999
-        },
-        {
-          "timestamp": 1769630501553,
-          "side": "SELL",
-          "size": 2.223403,
-          "price": 0.939999631195964,
-          "value": 2.0899979999999996
-        },
-        {
-          "timestamp": 1769630501946,
-          "side": "SELL",
-          "size": 3.234041,
-          "price": 0.9399998330262356,
-          "value": 3.0399979999999998
-        },
-        {
-          "timestamp": 1769630527143,
-          "side": "BUY",
-          "size": 16.129032258064516,
-          "price": 0.93,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769660562856,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0xeff97f3499e9446493240a92a098b9f7aa9529ab1e40b2484bf590b97aab9d66": {
-      "asset": "44005554976667798790028554071979403257289131963256216414880080379400519117599",
-      "conditionId": "0xeff97f3499e9446493240a92a098b9f7aa9529ab1e40b2484bf590b97aab9d66",
-      "market": "Will the US strike Iran next?",
-      "outcome": "No",
-      "openedAt": 1769620436949,
-      "initialSize": 15.337423312883436,
-      "initialValue": 15,
-      "currentSize": 126.30069934272825,
-      "currentValue": 135,
-      "lastUpdated": 1769662728673,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769620436950,
-          "side": "BUY",
-          "size": 15.337423312883436,
-          "price": 0.978,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620444773,
-          "side": "SELL",
-          "size": 15.337423312883436,
-          "price": 0.988,
-          "value": 15.153374233128835
-        },
-        {
-          "timestamp": 1769620459165,
-          "side": "BUY",
-          "size": 16.477207985382158,
-          "price": 0.9103484044934876,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620459520,
-          "side": "BUY",
-          "size": 16.822760234319205,
-          "price": 0.8916491581089833,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769627737358,
-          "side": "BUY",
-          "size": 15.36445795631174,
-          "price": 0.9762791530070203,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769627803279,
-          "side": "BUY",
-          "size": 15.261934953786072,
-          "price": 0.9828373692733441,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769629190097,
-          "side": "BUY",
-          "size": 15.592515575900165,
-          "price": 0.9620000010251099,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769632255366,
-          "side": "BUY",
-          "size": 15.435861493315583,
-          "price": 0.9717630600984383,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769662728673,
-          "side": "BUY",
-          "size": 16.008537830829887,
-          "price": 0.9370000032802743,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b": {
-      "asset": "106181075047366745139197108801635573283215248045056329679360376976893016488727",
-      "conditionId": "0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b",
-      "market": "Will the Iranian regime fall before 2027?",
-      "outcome": "No",
-      "openedAt": 1769620440590,
-      "initialSize": 24.59016393442623,
-      "initialValue": 15,
-      "currentSize": 123.36065573770492,
-      "currentValue": 75,
-      "lastUpdated": 1769639667895,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769620440592,
-          "side": "BUY",
-          "size": 24.59016393442623,
-          "price": 0.61,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620445791,
-          "side": "BUY",
-          "size": 24.59016393442623,
-          "price": 0.61,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620447064,
-          "side": "BUY",
-          "size": 24.59016393442623,
-          "price": 0.61,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769639667895,
-          "side": "BUY",
-          "size": 25,
-          "price": 0.6,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0x040bb6808948840d6a5f1cefa0742d2bcb990c0ecd2fd28353c5b23d97ec9dfc": {
-      "asset": "559156890525358594499985104752025781633478900523267788406074364287376668788",
-      "conditionId": "0x040bb6808948840d6a5f1cefa0742d2bcb990c0ecd2fd28353c5b23d97ec9dfc",
-      "market": "U.S. strike on Somalia by January 31?",
-      "outcome": "No",
-      "openedAt": 1769620445114,
-      "initialSize": 1250,
-      "initialValue": 15,
-      "currentSize": 3019.438641977429,
-      "currentValue": 150,
-      "lastUpdated": 1769652114670,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769620445116,
-          "side": "BUY",
-          "size": 1250,
-          "price": 0.012,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620445452,
-          "side": "BUY",
-          "size": 714.2857142857142,
-          "price": 0.021,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620446118,
-          "side": "BUY",
-          "size": 714.2857142857142,
-          "price": 0.021,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620451698,
-          "side": "BUY",
-          "size": 500,
-          "price": 0.03,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620459865,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620460528,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620460910,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620461238,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769620462305,
-          "side": "BUY",
-          "size": 16.6843407393323,
-          "price": 0.8990466110919462,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769625894919,
-          "side": "SELL",
-          "size": 200,
-          "price": 0.239,
-          "value": 47.8
-        },
-        {
-          "timestamp": 1769628073482,
-          "side": "SELL",
-          "size": 71.294641,
-          "price": 0.223999991808641,
-          "value": 15.969999
-        },
-        {
-          "timestamp": 1769628203379,
-          "side": "SELL",
-          "size": 92.295751,
-          "price": 0.22599999213398242,
-          "value": 20.858839
-        },
-        {
-          "timestamp": 1769635270417,
-          "side": "SELL",
-          "size": 4.426414,
-          "price": 0.2259998725830887,
-          "value": 1.000369
-        },
-        {
-          "timestamp": 1769637679895,
-          "side": "SELL",
-          "size": 71.812653,
-          "price": 0.22599999195127912,
-          "value": 16.229659
-        },
-        {
-          "timestamp": 1769637750299,
-          "side": "SELL",
-          "size": 13.274335,
-          "price": 0.22599994651332816,
-          "value": 2.9999990000000003
-        },
-        {
-          "timestamp": 1769637882979,
-          "side": "SELL",
-          "size": 40.17,
-          "price": 0.226,
-          "value": 9.078420000000001
-        },
-        {
-          "timestamp": 1769652048591,
-          "side": "SELL",
-          "size": 500,
-          "price": 0.23204952,
-          "value": 116.02476
-        },
-        {
-          "timestamp": 1769652114670,
-          "side": "SELL",
-          "size": 499.21,
-          "price": 0.23205809178502032,
-          "value": 115.84571999999999
-        }
-      ]
-    },
-    "0xf950740bc71136155d6525cc0528a582c81f88812bff227803190c32ca25f54d": {
-      "asset": "105252206997885252352889070218074909957179496257006510170583432513037465278006",
-      "conditionId": "0xf950740bc71136155d6525cc0528a582c81f88812bff227803190c32ca25f54d",
-      "market": "Will Scotland win the 2026 FIFA World Cup?",
-      "outcome": "Yes",
-      "openedAt": 1769620476193,
-      "initialSize": 3750,
-      "initialValue": 15,
-      "currentSize": 3749.999999999998,
-      "currentValue": 135,
-      "lastUpdated": 1769664458141,
-      "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1",
-      "trades": [
-        {
-          "timestamp": 1769620476194,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769620476777,
-          "side": "SELL",
-          "size": 3604.57,
-          "price": 0.005,
-          "value": 18.022850000000002
-        },
-        {
-          "timestamp": 1769620477501,
-          "side": "SELL",
-          "size": 145.42999999999984,
-          "price": 0.005,
-          "value": 0.7271499999999992
-        },
-        {
-          "timestamp": 1769620477829,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769620485577,
-          "side": "SELL",
-          "size": 3750,
-          "price": 0.005,
-          "value": 18.75
-        },
-        {
-          "timestamp": 1769620486506,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769620486852,
-          "side": "SELL",
-          "size": 3750,
-          "price": 0.005,
-          "value": 18.75
-        },
-        {
-          "timestamp": 1769620487176,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769620487506,
-          "side": "SELL",
-          "size": 205.89,
-          "price": 0.005,
-          "value": 1.02945
-        },
-        {
-          "timestamp": 1769620488089,
-          "side": "SELL",
-          "size": 227.74,
-          "price": 0.005,
-          "value": 1.1387
-        },
-        {
-          "timestamp": 1769620488670,
-          "side": "SELL",
-          "size": 220.55,
-          "price": 0.005,
-          "value": 1.1027500000000001
-        },
-        {
-          "timestamp": 1769620489178,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769620489591,
-          "side": "SELL",
-          "size": 248.29,
-          "price": 0.005,
-          "value": 1.24145
-        },
-        {
-          "timestamp": 1769620490191,
-          "side": "SELL",
-          "size": 227.64,
-          "price": 0.005,
-          "value": 1.1381999999999999
-        },
-        {
-          "timestamp": 1769620490526,
-          "side": "SELL",
-          "size": 268.66,
-          "price": 0.005,
-          "value": 1.3433000000000002
-        },
-        {
-          "timestamp": 1769620490899,
-          "side": "SELL",
-          "size": 283.83,
-          "price": 0.005,
-          "value": 1.41915
-        },
-        {
-          "timestamp": 1769620491250,
-          "side": "SELL",
-          "size": 289.69,
-          "price": 0.005,
-          "value": 1.44845
-        },
-        {
-          "timestamp": 1769620491577,
-          "side": "SELL",
-          "size": 219.97,
-          "price": 0.005,
-          "value": 1.09985
-        },
-        {
-          "timestamp": 1769620492331,
-          "side": "SELL",
-          "size": 269.46,
-          "price": 0.005,
-          "value": 1.3473
-        },
-        {
-          "timestamp": 1769620492928,
-          "side": "SELL",
-          "size": 239.19,
-          "price": 0.005,
-          "value": 1.19595
-        },
-        {
-          "timestamp": 1769620493609,
-          "side": "SELL",
-          "size": 245.94,
-          "price": 0.005,
-          "value": 1.2297
-        },
-        {
-          "timestamp": 1769620493964,
-          "side": "SELL",
-          "size": 246.75,
-          "price": 0.005,
-          "value": 1.2337500000000001
-        },
-        {
-          "timestamp": 1769620494306,
-          "side": "SELL",
-          "size": 261.31,
-          "price": 0.005,
-          "value": 1.30655
-        },
-        {
-          "timestamp": 1769620495397,
-          "side": "SELL",
-          "size": 3503,
-          "price": 0.005,
-          "value": 17.515
-        },
-        {
-          "timestamp": 1769620496830,
-          "side": "SELL",
-          "size": 290,
-          "price": 0.005,
-          "value": 1.45
-        },
-        {
-          "timestamp": 1769620497200,
-          "side": "SELL",
-          "size": 252.0900000000006,
-          "price": 0.005,
-          "value": 1.260450000000003
-        },
-        {
-          "timestamp": 1769638862942,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769642745375,
-          "side": "SELL",
-          "size": 200,
-          "price": 0.005,
-          "value": 1
-        },
-        {
-          "timestamp": 1769649460206,
-          "side": "SELL",
-          "size": 883.53,
-          "price": 0.005,
-          "value": 4.41765
-        },
-        {
-          "timestamp": 1769651734258,
-          "side": "SELL",
-          "size": 177,
-          "price": 0.005,
-          "value": 0.885
-        },
-        {
-          "timestamp": 1769653675438,
-          "side": "SELL",
-          "size": 1896,
-          "price": 0.005,
-          "value": 9.48
-        },
-        {
-          "timestamp": 1769653741847,
-          "side": "SELL",
-          "size": 202,
-          "price": 0.005,
-          "value": 1.01
-        },
-        {
-          "timestamp": 1769653742266,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769660448411,
-          "side": "SELL",
-          "size": 366.46,
-          "price": 0.005,
-          "value": 1.8323
-        },
-        {
-          "timestamp": 1769660776382,
-          "side": "SELL",
-          "size": 136.32,
-          "price": 0.005,
-          "value": 0.6816
-        },
-        {
-          "timestamp": 1769660777433,
-          "side": "SELL",
-          "size": 138.75,
-          "price": 0.005,
-          "value": 0.69375
-        },
-        {
-          "timestamp": 1769663864442,
-          "side": "SELL",
-          "size": 258,
-          "price": 0.005,
-          "value": 1.29
-        },
-        {
-          "timestamp": 1769663864823,
-          "side": "BUY",
-          "size": 3750,
-          "price": 0.004,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769663996140,
-          "side": "SELL",
-          "size": 3699.29,
-          "price": 0.005,
-          "value": 18.49645
-        },
-        {
-          "timestamp": 1769664458141,
-          "side": "SELL",
-          "size": 3292.6500000000005,
-          "price": 0.005,
-          "value": 16.463250000000002
-        }
-      ]
-    },
-    "0xa2b6014de38efec2b399cf5378923c3bf899ebcfab35ddbe23f1f038945d3b1f": {
-      "asset": "13254241531379113814268623702591445764028502818838968001780086361032892261649",
-      "conditionId": "0xa2b6014de38efec2b399cf5378923c3bf899ebcfab35ddbe23f1f038945d3b1f",
-      "market": "Ilhan Omar town hall attack staged?",
-      "outcome": "No",
-      "openedAt": 1769624708158,
-      "initialSize": 16.286644951140065,
-      "initialValue": 15,
-      "currentSize": 16.286644951140048,
-      "currentValue": 90,
-      "lastUpdated": 1769632807511,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769624708160,
-          "side": "BUY",
-          "size": 16.286644951140065,
-          "price": 0.921,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769624709194,
-          "side": "BUY",
-          "size": 16.038520848911638,
-          "price": 0.93524834,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769629602216,
-          "side": "BUY",
-          "size": 15.789473684210527,
-          "price": 0.95,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769629602667,
-          "side": "BUY",
-          "size": 15.789473684210527,
-          "price": 0.95,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769632672308,
-          "side": "SELL",
-          "size": 63.90411316847276,
-          "price": 0.966,
-          "value": 61.73137332074469
-        },
-        {
-          "timestamp": 1769632687509,
-          "side": "BUY",
-          "size": 15.77287066246057,
-          "price": 0.951,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769632807511,
-          "side": "SELL",
-          "size": 15.77287066246057,
-          "price": 0.967,
-          "value": 15.25236593059937
-        }
-      ]
-    },
-    "0x705371444684d676041d1010a94cae3a657340fa4809b4307de3c173a35e0957": {
-      "asset": "114421380098084026753773605667430150755820287180340356465450569515479471185603",
-      "conditionId": "0x705371444684d676041d1010a94cae3a657340fa4809b4307de3c173a35e0957",
-      "market": "Will Trump nominate Christopher Waller as the next Fed chair?",
-      "outcome": "Yes",
-      "openedAt": 1769626888933,
-      "initialSize": 112.69777564415377,
-      "initialValue": 15,
-      "currentSize": 112.69777564415372,
-      "currentValue": 45,
-      "lastUpdated": 1769627345231,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769626888936,
-          "side": "BUY",
-          "size": 112.69777564415377,
-          "price": 0.13309934392461215,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769626889325,
-          "side": "BUY",
-          "size": 110.29411764705881,
-          "price": 0.136,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769627212666,
-          "side": "SELL",
-          "size": 62.162161,
-          "price": 0.14799998667999975,
-          "value": 9.199999
-        },
-        {
-          "timestamp": 1769627345231,
-          "side": "SELL",
-          "size": 160.8297322912126,
-          "price": 0.148,
-          "value": 23.802800379099462
-        }
-      ]
-    },
-    "0x35cc41270f5cdfd59b45e68ab85dc51b0b900d286a6c74ea006b8572d9ff5934": {
-      "asset": "48193521645113703700467246669338225849301704920590102230072263970163239985027",
-      "conditionId": "0x35cc41270f5cdfd59b45e68ab85dc51b0b900d286a6c74ea006b8572d9ff5934",
-      "market": "Fed decreases interest rates by 25 bps after January 2026 meeting?",
-      "outcome": "No",
-      "openedAt": 1769627148559,
-      "initialSize": 15.015015015015015,
-      "initialValue": 15,
-      "currentSize": 30.03003003003003,
-      "currentValue": 30,
-      "lastUpdated": 1769627148560,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769627148560,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0x5e253008e2c8a4f1e66972062d99e69aea298794ec56c30526a2edd763d6b9e3": {
-      "asset": "59384261526964250038574073876197739413338205041441126633976885115034334726761",
-      "conditionId": "0x5e253008e2c8a4f1e66972062d99e69aea298794ec56c30526a2edd763d6b9e3",
-      "market": "Will Nicolás Maduro be sentenced to less than 20 years in prison?",
-      "outcome": "Yes",
-      "openedAt": 1769628635464,
-      "initialSize": 375,
-      "initialValue": 15,
-      "currentSize": 750,
-      "currentValue": 30,
-      "lastUpdated": 1769628635465,
+      "eventSlug": "openai-ipo-by",
+      "openedAt": 1777379771531,
+      "initialSize": 12.658227848101266,
+      "initialValue": 10,
+      "currentSize": 25.31645569620253,
+      "currentValue": 20,
+      "lastUpdated": 1777379771532,
       "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
       "trades": [
         {
-          "timestamp": 1769628635465,
+          "timestamp": 1777379771531,
           "side": "BUY",
-          "size": 375,
-          "price": 0.04,
-          "value": 15,
+          "size": 12.658227848101266,
+          "price": 0.79,
+          "value": 10,
           "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
         }
       ]
     },
-    "0x43ec78527bd98a0588dd9455685b2cc82f5743140cb3a154603dc03c02b57de5": {
-      "asset": "52607315900507156846622820770453728082833251091510131025984187712529448877245",
-      "conditionId": "0x43ec78527bd98a0588dd9455685b2cc82f5743140cb3a154603dc03c02b57de5",
-      "market": "US government shutdown Saturday?",
+    "0x186733e78213058e9e5bcb47085f6fffdf491f72a8e233cbc6f2fa107090f4b0": {
+      "asset": "75099534173222725145149153062138997456798177837111929215842528888516768898089",
+      "conditionId": "0x186733e78213058e9e5bcb47085f6fffdf491f72a8e233cbc6f2fa107090f4b0",
+      "market": "Will 100-124 ships transit the Strait of Hormuz between April 27-May 3?",
       "outcome": "Yes",
-      "openedAt": 1769629709394,
-      "initialSize": 21.126756593928377,
-      "initialValue": 15,
-      "currentSize": 21.126756593928377,
-      "currentValue": 240,
-      "lastUpdated": 1769662719337,
-      "trader": "0x6bab41a0dc40d6dd4c1a915b8c01969479fd1292",
+      "eventSlug": "how-many-ships-transit-the-strait-of-hormuz-week-of-apr-27",
+      "openedAt": 1778018927659,
+      "initialSize": 10.526315789473685,
+      "initialValue": 10,
+      "currentSize": 21.05263157894737,
+      "currentValue": 20,
+      "lastUpdated": 1778018927661,
+      "trader": "0x7be42b643002a97434f4666ea145784bc7798477",
       "trades": [
         {
-          "timestamp": 1769629709396,
+          "timestamp": 1778018927660,
           "side": "BUY",
-          "size": 21.126756593928377,
-          "price": 0.7100001334000721,
-          "value": 15,
-          "trader": "0x6bab41a0dc40d6dd4c1a915b8c01969479fd1292"
-        },
-        {
-          "timestamp": 1769629929917,
-          "side": "BUY",
-          "size": 60,
-          "price": 0.25,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        },
-        {
-          "timestamp": 1769630210446,
-          "side": "SELL",
-          "size": 21.126756593928377,
-          "price": 0.69,
-          "value": 14.57746204981058
-        },
-        {
-          "timestamp": 1769638150979,
-          "side": "BUY",
-          "size": 22.058823529411764,
-          "price": 0.68,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769642266158,
-          "side": "SELL",
-          "size": 22.058823529411764,
-          "price": 0.62,
-          "value": 13.676470588235293
-        },
-        {
-          "timestamp": 1769642398973,
-          "side": "BUY",
-          "size": 23.80952380952381,
-          "price": 0.63,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769642548037,
-          "side": "SELL",
-          "size": 23.80952380952381,
-          "price": 0.65,
-          "value": 15.476190476190476
-        },
-        {
-          "timestamp": 1769660628839,
-          "side": "BUY",
-          "size": 42.85714285714286,
-          "price": 0.35,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769660629293,
-          "side": "BUY",
-          "size": 41.97659917510901,
-          "price": 0.3573419546787534,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769660824916,
-          "side": "SELL",
-          "size": 5.128204,
-          "price": 0.389999890799976,
-          "value": 1.999999
-        },
-        {
-          "timestamp": 1769660825317,
-          "side": "SELL",
-          "size": 139.70553803225187,
-          "price": 0.39,
-          "value": 54.485159832578226
-        },
-        {
-          "timestamp": 1769661076013,
-          "side": "BUY",
-          "size": 30,
-          "price": 0.5,
-          "value": 15,
-          "trader": "0x6bab41a0dc40d6dd4c1a915b8c01969479fd1292"
-        },
-        {
-          "timestamp": 1769661076401,
-          "side": "BUY",
-          "size": 30,
-          "price": 0.5,
-          "value": 15,
-          "trader": "0x6bab41a0dc40d6dd4c1a915b8c01969479fd1292"
-        },
-        {
-          "timestamp": 1769661076763,
-          "side": "BUY",
-          "size": 30,
-          "price": 0.5,
-          "value": 15,
-          "trader": "0x6bab41a0dc40d6dd4c1a915b8c01969479fd1292"
-        },
-        {
-          "timestamp": 1769661693272,
-          "side": "SELL",
-          "size": 90,
-          "price": 0.42,
-          "value": 37.8
-        },
-        {
-          "timestamp": 1769661743326,
-          "side": "BUY",
-          "size": 36.58536490600832,
-          "price": 0.41000001062000035,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769661759919,
-          "side": "BUY",
-          "size": 27.777777777777775,
-          "price": 0.54,
-          "value": 15,
-          "trader": "0xdd225a03cd7ed89e3931906c67c75ab31cf89ef1"
-        },
-        {
-          "timestamp": 1769661809401,
-          "side": "SELL",
-          "size": 27.777777777777775,
-          "price": 0.56,
-          "value": 15.555555555555555
-        },
-        {
-          "timestamp": 1769661814004,
-          "side": "BUY",
-          "size": 36.585363221296646,
-          "price": 0.4100000295000044,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769661892659,
-          "side": "SELL",
-          "size": 8,
-          "price": 0.49,
-          "value": 3.92
-        },
-        {
-          "timestamp": 1769661893039,
-          "side": "SELL",
-          "size": 45.2,
-          "price": 0.49,
-          "value": 22.148
-        },
-        {
-          "timestamp": 1769661893380,
-          "side": "SELL",
-          "size": 19.970728127304966,
-          "price": 0.49,
-          "value": 9.785656782379434
-        },
-        {
-          "timestamp": 1769661984308,
-          "side": "BUY",
-          "size": 36.58536585365855,
-          "price": 0.40999999999999986,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769661985442,
-          "side": "SELL",
-          "size": 3.57,
-          "price": 0.49,
-          "value": 1.7492999999999999
-        },
-        {
-          "timestamp": 1769662008037,
-          "side": "SELL",
-          "size": 7.33,
-          "price": 0.47,
-          "value": 3.4451
-        },
-        {
-          "timestamp": 1769662008391,
-          "side": "SELL",
-          "size": 25.685365853658553,
-          "price": 0.47,
-          "value": 12.072121951219518
-        },
-        {
-          "timestamp": 1769662266645,
-          "side": "BUY",
-          "size": 36.58536585365854,
-          "price": 0.41,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769662286919,
-          "side": "BUY",
-          "size": 36.58536585365854,
-          "price": 0.41,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769662719337,
-          "side": "SELL",
-          "size": 73.17073170731707,
-          "price": 0.5,
-          "value": 36.58536585365854
+          "size": 10.526315789473685,
+          "price": 0.95,
+          "value": 10,
+          "trader": "0x7be42b643002a97434f4666ea145784bc7798477"
         }
       ]
     },
-    "0x705b8c1edeff1e28846175e65b5effaff746c446737aff52440c4211f49dadfc": {
-      "asset": "31863881776925088536662567082600580308156065003202998122202789468932109041050",
-      "conditionId": "0x705b8c1edeff1e28846175e65b5effaff746c446737aff52440c4211f49dadfc",
-      "market": "U.S. Government Funding Lapse on January 31?",
-      "outcome": "Yes",
-      "openedAt": 1769632454927,
-      "initialSize": 18.75,
-      "initialValue": 15,
-      "currentSize": 37.5,
-      "currentValue": 30,
-      "lastUpdated": 1769632454929,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+    "0x4717809a54c77fcee067ec3750f1c533c6920ad7948959455f31359a3cea9ae5": {
+      "asset": "11262891836498143809292163793903854975065912883625296778436965573788280780071",
+      "conditionId": "0x4717809a54c77fcee067ec3750f1c533c6920ad7948959455f31359a3cea9ae5",
+      "market": "Honor of Kings: JD Gaming vs LGD NBW (BO7) - Honor of Kings Challenger Cup Stage 2",
+      "outcome": "JD Gaming",
+      "eventSlug": "hok-jdg-lgd-2026-05-11",
+      "openedAt": 1778506708710,
+      "initialSize": 10.869565217391305,
+      "initialValue": 10,
+      "currentSize": 21.73913043478261,
+      "currentValue": 20,
+      "lastUpdated": 1778506708745,
+      "trader": "0xc538b519e0dab4c69514c588e73076af1ea3c555",
       "trades": [
         {
-          "timestamp": 1769632454929,
+          "timestamp": 1778506708711,
           "side": "BUY",
-          "size": 18.75,
-          "price": 0.8,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0x2b349aaea59af2f98428d3ddd192c9bcb61ea21c334f0956519a8fd93cebaffd": {
-      "asset": "46252661527091274359665306468779430046724896552105995656034908539738735109744",
-      "conditionId": "0x2b349aaea59af2f98428d3ddd192c9bcb61ea21c334f0956519a8fd93cebaffd",
-      "market": "Will Gold (GC) hit (HIGH) $5,500 by end of January?",
-      "outcome": "No",
-      "openedAt": 1769632857735,
-      "initialSize": 24.11575556018606,
-      "initialValue": 15,
-      "currentSize": 24.115755560186074,
-      "currentValue": 120,
-      "lastUpdated": 1769674681026,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769632857736,
-          "side": "BUY",
-          "size": 24.11575556018606,
-          "price": 0.6220000017235318,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769632923387,
-          "side": "BUY",
-          "size": 24.11575533107258,
-          "price": 0.6220000076328878,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769632991043,
-          "side": "BUY",
-          "size": 23.961661083109057,
-          "price": 0.6260000067597038,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769633060134,
-          "side": "BUY",
-          "size": 23.88535031847134,
-          "price": 0.628,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769638217522,
-          "side": "SELL",
-          "size": 96.07852229283903,
-          "price": 0.498,
-          "value": 47.847104101833835
-        },
-        {
-          "timestamp": 1769639468882,
-          "side": "BUY",
-          "size": 71.0900472894934,
-          "price": 0.21100000030829763,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769641544387,
-          "side": "SELL",
-          "size": 71.0900472894934,
-          "price": 0.45005533,
-          "value": 31.994454692588555
-        },
-        {
-          "timestamp": 1769644336105,
-          "side": "BUY",
-          "size": 50,
-          "price": 0.3,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769644598570,
-          "side": "SELL",
-          "size": 50,
-          "price": 0.30003356720319163,
-          "value": 15.001678360159582
-        },
-        {
-          "timestamp": 1769657205063,
-          "side": "BUY",
-          "size": 102.73972602739727,
-          "price": 0.146,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769674681026,
-          "side": "SELL",
-          "size": 102.73972602739727,
-          "price": 0.252,
-          "value": 25.890410958904113
-        }
-      ]
-    },
-    "0xb42cf911da8aa39a9f634c190120f5c36f7301b69b15d20aa23382ac350b830d": {
-      "asset": "60779836503148316716008191615925305248541803931587899152799310624357165624468",
-      "conditionId": "0xb42cf911da8aa39a9f634c190120f5c36f7301b69b15d20aa23382ac350b830d",
-      "market": "Will Gold (GC) hit (HIGH) $6,000 by end of January?",
-      "outcome": "No",
-      "openedAt": 1769637751162,
-      "initialSize": 16.094420585843118,
-      "initialValue": 15,
-      "currentSize": 16.094420585843118,
-      "currentValue": 30,
-      "lastUpdated": 1769644269757,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769637751163,
-          "side": "BUY",
-          "size": 16.094420585843118,
-          "price": 0.9320000008695073,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769644269757,
-          "side": "SELL",
-          "size": 16.094420585843118,
-          "price": 0.969,
-          "value": 15.595493547681981
-        }
-      ]
-    },
-    "0x35155be9ad199e97505970a5dfb2b4bca7a9d1bb7b731389a590091997998a78": {
-      "asset": "107281002012721876026695277673649500471455902224367011098589595335909329157141",
-      "conditionId": "0x35155be9ad199e97505970a5dfb2b4bca7a9d1bb7b731389a590091997998a78",
-      "market": "Tesla launches unsupervised full self driving (FSD) by June 30?",
-      "outcome": "Yes",
-      "openedAt": 1769641610674,
-      "initialSize": 16.666666666666668,
-      "initialValue": 15,
-      "currentSize": 16.66666666666667,
-      "currentValue": 120,
-      "lastUpdated": 1769676715496,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769641610674,
-          "side": "BUY",
-          "size": 16.666666666666668,
-          "price": 0.9,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769641611056,
-          "side": "BUY",
-          "size": 16.772253154448315,
-          "price": 0.8943342234267267,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769648781649,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769653112796,
-          "side": "BUY",
-          "size": 15.075376884422111,
-          "price": 0.995,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769653180814,
-          "side": "BUY",
-          "size": 15.075376884422111,
-          "price": 0.995,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769653181191,
-          "side": "BUY",
-          "size": 15.075376884422111,
-          "price": 0.995,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769653181555,
-          "side": "BUY",
-          "size": 15.075376884422111,
-          "price": 0.995,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769676715496,
-          "side": "SELL",
-          "size": 108.75544237381844,
-          "price": 0.999,
-          "value": 108.64668693144462
-        }
-      ]
-    },
-    "0x51b68255809008f82d48f3337c24b601326e75a25ea447d37ad3f084cd349bac": {
-      "asset": "85042366578071160010362487741310557211229839063488327055582358252286056286425",
-      "conditionId": "0x51b68255809008f82d48f3337c24b601326e75a25ea447d37ad3f084cd349bac",
-      "market": "Tesla launches unsupervised full self driving (FSD) by March 31?",
-      "outcome": "Yes",
-      "openedAt": 1769642597038,
-      "initialSize": 16.304347826086957,
-      "initialValue": 15,
-      "currentSize": 31.610470275066547,
-      "currentValue": 60,
-      "lastUpdated": 1769648782032,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769642597040,
-          "side": "BUY",
-          "size": 16.304347826086957,
+          "size": 10.869565217391305,
           "price": 0.92,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769644598957,
-          "side": "BUY",
-          "size": 15.789473684210527,
-          "price": 0.95,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769648715004,
-          "side": "SELL",
-          "size": 32.09382151029749,
-          "price": 0.97,
-          "value": 31.131006864988564
-        },
-        {
-          "timestamp": 1769648782032,
-          "side": "BUY",
-          "size": 15.306122448979592,
-          "price": 0.98,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
+          "value": 10,
+          "trader": "0xc538b519e0dab4c69514c588e73076af1ea3c555"
         }
       ]
     },
-    "0x487b4d303237dda42cf73b69695181d7cf5cc3e71c9a4f710f0107358d0fab1f": {
-      "asset": "13600318815028809242509265086034597357335288291370875305289803673525470406751",
-      "conditionId": "0x487b4d303237dda42cf73b69695181d7cf5cc3e71c9a4f710f0107358d0fab1f",
-      "market": "Tesla (TSLA) Up or Down on January 28?",
-      "outcome": "Down",
-      "openedAt": 1769652443844,
-      "initialSize": 15.608740894901144,
-      "initialValue": 15,
-      "currentSize": 15.608740894901146,
-      "currentValue": 45,
-      "lastUpdated": 1769652912519,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769652443846,
-          "side": "BUY",
-          "size": 15.608740894901144,
-          "price": 0.961,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769652444218,
-          "side": "BUY",
-          "size": 15.957446808510639,
-          "price": 0.94,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769652912143,
-          "side": "SELL",
-          "size": 25,
-          "price": 0.1,
-          "value": 2.5
-        },
-        {
-          "timestamp": 1769652912519,
-          "side": "SELL",
-          "size": 6.566187703411785,
-          "price": 0.1,
-          "value": 0.6566187703411785
-        }
-      ]
-    },
-    "0xc3496089277c2d5d9951ad652461b1b9cc9778ebbf4c82b661d23d7aa958595a": {
-      "asset": "110690066155474798907137745191724629949144484215573659839900059900091691457461",
-      "conditionId": "0xc3496089277c2d5d9951ad652461b1b9cc9778ebbf4c82b661d23d7aa958595a",
-      "market": "Will the US not strike another country before 2027?",
-      "outcome": "No",
-      "openedAt": 1769656550983,
-      "initialSize": 15.015015015015015,
-      "initialValue": 15,
-      "currentSize": 90.09009009009009,
-      "currentValue": 90,
-      "lastUpdated": 1769657270286,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769656550984,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769657205698,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769657206092,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769657207183,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769657270286,
-          "side": "BUY",
-          "size": 15.015015015015015,
-          "price": 0.999,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0xbcd0df4a902df08f0d355349a4f407319cbc7953fc58fd1f96d746c5ad5a42ff": {
-      "asset": "90992282830242158595677520509305722608531993318748550824277709095882883537906",
-      "conditionId": "0xbcd0df4a902df08f0d355349a4f407319cbc7953fc58fd1f96d746c5ad5a42ff",
-      "market": "Will Khamenei leave Iran by February 28, 2026?",
-      "outcome": "No",
-      "openedAt": 1769660431501,
-      "initialSize": 15.625,
-      "initialValue": 15,
-      "currentSize": 46.875,
-      "currentValue": 45,
-      "lastUpdated": 1769660826067,
-      "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
-      "trades": [
-        {
-          "timestamp": 1769660431502,
-          "side": "BUY",
-          "size": 15.625,
-          "price": 0.96,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        },
-        {
-          "timestamp": 1769660826067,
-          "side": "BUY",
-          "size": 15.625,
-          "price": 0.96,
-          "value": 15,
-          "trader": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b"
-        }
-      ]
-    },
-    "0xb122b2a17c8dea01d5e8ffe04316bbe011f9bf80c989bb82afde2f39a3fd4441": {
-      "asset": "85482789936744260311999371350699987044247644306653001528276695717482676507600",
-      "conditionId": "0xb122b2a17c8dea01d5e8ffe04316bbe011f9bf80c989bb82afde2f39a3fd4441",
-      "market": "Will Edmundo González be the leader of Venezuela end of 2026?",
+    "0x92d3cabd2352ad17808418327c3d99f0df45151dac476ef08359d8e9649bf45f": {
+      "asset": "18649748637706708772301402301272236381285155217595014922635771445737710820834",
+      "conditionId": "0x92d3cabd2352ad17808418327c3d99f0df45151dac476ef08359d8e9649bf45f",
+      "market": "Will the NYT front-page headlines say \"Street\" this week?",
       "outcome": "Yes",
-      "openedAt": 1769662372337,
-      "initialSize": 300,
-      "initialValue": 15,
-      "currentSize": 600,
-      "currentValue": 30,
-      "lastUpdated": 1769662372338,
+      "eventSlug": "what-will-the-nyt-front-page-headlines-say-this-week-may-4-may-10",
+      "openedAt": 1778529821699,
+      "initialSize": 1000,
+      "initialValue": 10,
+      "currentSize": 2000,
+      "currentValue": 20,
+      "lastUpdated": 1778529821700,
       "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
       "trades": [
         {
-          "timestamp": 1769662372338,
+          "timestamp": 1778529821699,
           "side": "BUY",
-          "size": 300,
-          "price": 0.05,
-          "value": 15,
-          "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
-        }
-      ]
-    },
-    "0x386c1da56d757c6920fc73535aba510300e9cd666c0312d11b4cc03f097fb487": {
-      "asset": "63261459433323020856575387789253256070173594617236763006477922210149664988186",
-      "conditionId": "0x386c1da56d757c6920fc73535aba510300e9cd666c0312d11b4cc03f097fb487",
-      "market": "US strike on Mexico by January 31?",
-      "outcome": "Yes",
-      "openedAt": 1769664188077,
-      "initialSize": 3000,
-      "initialValue": 15,
-      "currentSize": 6000,
-      "currentValue": 30,
-      "lastUpdated": 1769664188078,
-      "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
-      "trades": [
-        {
-          "timestamp": 1769664188078,
-          "side": "BUY",
-          "size": 3000,
-          "price": 0.005,
-          "value": 15,
+          "size": 1000,
+          "price": 0.01,
+          "value": 10,
           "trader": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344"
         }
       ]
     }
   },
-  "lastUpdated": 1769706172249
+  "lastUpdated": 1778529821700
 }

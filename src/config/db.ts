@@ -6,7 +6,10 @@ const uri = ENV.MONGO_URI || 'mongodb://localhost:27017/polymarket_copytrading';
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(uri);
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 10000, // 10s max pour trouver le serveur
+            connectTimeoutMS: 10000,         // 10s max pour établir la connexion
+        });
         console.log(chalk.green('✓'), 'MongoDB connected');
     } catch (error) {
         console.log(chalk.red('✗'), 'MongoDB connection failed:', error);

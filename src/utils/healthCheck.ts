@@ -16,6 +16,17 @@ export interface HealthCheckResult {
 }
 
 /**
+ * Execute a promise with a hard timeout — prevents infinite hangs (e.g. ethers.js RPC calls)
+ */
+const withTimeout = <T>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
+    Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+        ),
+    ]);
+
+/**
  * Perform health check on all critical components
  */
 export const performHealthCheck = async (): Promise<HealthCheckResult> => {
@@ -49,69 +60,77 @@ export const performHealthCheck = async (): Promise<HealthCheckResult> => {
         };
     }
 
-    // Check RPC endpoint
-    try {
-        const response = await fetch(ENV.RPC_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                jsonrpc: '2.0',
-                method: 'eth_blockNumber',
-                params: [],
-                id: 1,
-            }),
-            signal: AbortSignal.timeout(5000), // 5 second timeout
-        });
+    // Check RPC endpoint (ignoré en DRY_RUN — simulation ne nécessite pas de RPC)
+    if (ENV.DRY_RUN) {
+        checks.rpc = { status: 'ok', message: 'Ignoré (DRY_RUN mode)' };
+    } else {
+        try {
+            const response = await fetch(ENV.RPC_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'eth_blockNumber',
+                    params: [],
+                    id: 1,
+                }),
+                signal: AbortSignal.timeout(5000), // 5 second timeout
+            });
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.result) {
-                checks.rpc = { status: 'ok', message: 'RPC endpoint responding' };
+            if (response.ok) {
+                const data = await response.json();
+                if (data.result) {
+                    checks.rpc = { status: 'ok', message: 'RPC endpoint responding' };
+                } else {
+                    checks.rpc = { status: 'error', message: 'Invalid RPC response' };
+                }
             } else {
-                checks.rpc = { status: 'error', message: 'Invalid RPC response' };
+                checks.rpc = { status: 'error', message: `HTTP ${response.status}` };
             }
-        } else {
-            checks.rpc = { status: 'error', message: `HTTP ${response.status}` };
+        } catch (error) {
+            checks.rpc = {
+                status: 'error',
+                message: `RPC check failed: ${error instanceof Error ? error.message : String(error)}`,
+            };
         }
-    } catch (error) {
-        checks.rpc = {
-            status: 'error',
-            message: `RPC check failed: ${error instanceof Error ? error.message : String(error)}`,
-        };
     }
 
-    // Check USDC balance
-    try {
-        const balance = await getMyBalance(ENV.PROXY_WALLET);
-        if (balance > 0) {
-            if (balance < 10) {
-                checks.balance = {
-                    status: 'warning',
-                    message: `Low balance: $${balance.toFixed(2)}`,
-                    balance,
-                };
+    // Check USDC balance (ignoré en DRY_RUN — simulation utilise une balance virtuelle)
+    if (ENV.DRY_RUN) {
+        checks.balance = { status: 'ok', message: 'Ignoré (DRY_RUN mode — balance virtuelle)' };
+    } else {
+        try {
+            const balance = await withTimeout(getMyBalance(ENV.PROXY_WALLET), 8000, 'Balance check');
+            if (balance > 0) {
+                if (balance < 10) {
+                    checks.balance = {
+                        status: 'warning',
+                        message: `Low balance: $${balance.toFixed(2)}`,
+                        balance,
+                    };
+                } else {
+                    checks.balance = {
+                        status: 'ok',
+                        message: `Balance: $${balance.toFixed(2)}`,
+                        balance,
+                    };
+                }
             } else {
-                checks.balance = {
-                    status: 'ok',
-                    message: `Balance: $${balance.toFixed(2)}`,
-                    balance,
-                };
+                checks.balance = { status: 'error', message: 'Zero balance' };
             }
-        } else {
-            checks.balance = { status: 'error', message: 'Zero balance' };
+        } catch (error) {
+            checks.balance = {
+                status: 'error',
+                message: `Balance check failed: ${error instanceof Error ? error.message : String(error)}`,
+            };
         }
-    } catch (error) {
-        checks.balance = {
-            status: 'error',
-            message: `Balance check failed: ${error instanceof Error ? error.message : String(error)}`,
-        };
     }
 
     // Check Polymarket API
     try {
         const testUrl =
             'https://data-api.polymarket.com/positions?user=0x0000000000000000000000000000000000000000';
-        await fetchData(testUrl);
+        await withTimeout(fetchData(testUrl), 10000, 'Polymarket API');
         checks.polymarketApi = { status: 'ok', message: 'API responding' };
     } catch (error) {
         checks.polymarketApi = {

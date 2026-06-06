@@ -1,0 +1,19 @@
+{
+  "name": "polymarket-trader-finder",
+  "version": "1.0.0",
+  "description": "Trouve les traders positionnels sur Polymarket (non news-traders) via analyse OpenAI",
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "find": "ts-node src/main.ts",
+    "find:more": "ts-node src/main.ts 60 100"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

@@ -8,7 +8,9 @@
         "setup": "ts-node src/scripts/setup.ts",
         "build": "tsc",
         "start": "node dist/index.js",
+        "predev": "node scripts/kill-bot.js",
         "dev": "ts-node src/index.ts",
+        "prestart": "node scripts/kill-bot.js",
         "reset-sim": "ts-node src/scripts/resetSimulation.ts",
         "start-fresh": "ts-node src/scripts/interactiveStart.ts",
         "check-problems": "ts-node src/scripts/checkProblems.ts",
@@ -52,6 +54,9 @@
         "compare-performance": "ts-node src/scripts/compareTraderPerformance.ts",
         "check-delay": "ts-node src/scripts/checkPriceDelay.ts",
         "find-copyable": "ts-node src/scripts/findCopyableTraders.ts",
+        "test-blockchain": "ts-node src/scripts/testBlockchainMonitor.ts",
+        "test-blockchain-all": "ts-node src/scripts/testBlockchainMonitor.ts all",
+        "test-blockchain-stats": "ts-node src/scripts/testBlockchainMonitor.ts stats",
         "lint": "eslint .",
         "lint:fix": "eslint --fix .",
         "format": "prettier --write .",
@@ -89,6 +94,7 @@
         "ethers": "^5.8.0",
         "moment": "^2.30.1",
         "mongoose": "^8.9.5",
-        "ora": "^8.2.0"
+        "ora": "^8.2.0",
+        "telegram": "^2.26.22"
     }
 }

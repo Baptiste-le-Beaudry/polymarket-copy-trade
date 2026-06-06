@@ -20,70 +20,65 @@ const userModels = USER_ADDRESSES.map((address) => ({
 }));
 
 const init = async () => {
-    const counts: number[] = [];
-    for (const { address, UserActivity } of userModels) {
-        const count = await UserActivity.countDocuments();
-        counts.push(count);
-    }
+    // Paralléliser les countDocuments pour tous les traders → ~12s → ~1s
+    const counts = await Promise.all(
+        userModels.map(({ UserActivity }) => UserActivity.countDocuments())
+    );
     Logger.clearLine();
     Logger.dbConnection(USER_ADDRESSES, counts);
 
-    // Show your own positions first
-    try {
-        const myPositionsUrl = `https://data-api.polymarket.com/positions?user=${ENV.PROXY_WALLET}`;
-        const myPositions = await fetchData(myPositionsUrl);
+    // Lancer en parallèle : positions du bot + positions de tous les traders
+    const [myPositionsResult, allTraderPositions] = await Promise.all([
+        // Positions du bot
+        (async () => {
+            try {
+                const myPositionsUrl = `https://data-api.polymarket.com/positions?user=${ENV.PROXY_WALLET}`;
+                const getMyBalance = (await import('../utils/getMyBalance')).default;
+                const [myPositions, currentBalance] = await Promise.all([
+                    fetchData(myPositionsUrl),
+                    getMyBalance(ENV.PROXY_WALLET),
+                ]);
+                return { myPositions, currentBalance };
+            } catch (error) {
+                Logger.error(`Failed to fetch your positions: ${error}`);
+                return { myPositions: [], currentBalance: 0 };
+            }
+        })(),
+        // Positions des traders surveillés (toutes en parallèle)
+        Promise.all(userModels.map(({ UserPosition }) => UserPosition.find().exec())),
+    ]);
 
-        // Get current USDC balance
-        const getMyBalance = (await import('../utils/getMyBalance')).default;
-        const currentBalance = await getMyBalance(ENV.PROXY_WALLET);
-
-        if (Array.isArray(myPositions) && myPositions.length > 0) {
-            // Calculate your overall profitability and initial investment
-            let totalValue = 0;
-            let initialValue = 0;
-            let weightedPnl = 0;
-            myPositions.forEach((pos: any) => {
-                const value = pos.currentValue || 0;
-                const initial = pos.initialValue || 0;
-                const pnl = pos.percentPnl || 0;
-                totalValue += value;
-                initialValue += initial;
-                weightedPnl += value * pnl;
-            });
-            const myOverallPnl = totalValue > 0 ? weightedPnl / totalValue : 0;
-
-            // Get top 5 positions by profitability (PnL)
-            const myTopPositions = myPositions
-                .sort((a: any, b: any) => (b.percentPnl || 0) - (a.percentPnl || 0))
-                .slice(0, 5);
-
-            Logger.clearLine();
-            Logger.myPositions(
-                ENV.PROXY_WALLET,
-                myPositions.length,
-                myTopPositions,
-                myOverallPnl,
-                totalValue,
-                initialValue,
-                currentBalance
-            );
-        } else {
-            Logger.clearLine();
-            Logger.myPositions(ENV.PROXY_WALLET, 0, [], 0, 0, 0, currentBalance);
-        }
-    } catch (error) {
-        Logger.error(`Failed to fetch your positions: ${error}`);
+    // Afficher les positions du bot
+    const { myPositions, currentBalance } = myPositionsResult;
+    if (Array.isArray(myPositions) && myPositions.length > 0) {
+        let totalValue = 0;
+        let initialValue = 0;
+        let weightedPnl = 0;
+        myPositions.forEach((pos: any) => {
+            const value = pos.currentValue || 0;
+            const initial = pos.initialValue || 0;
+            const pnl = pos.percentPnl || 0;
+            totalValue += value;
+            initialValue += initial;
+            weightedPnl += value * pnl;
+        });
+        const myOverallPnl = totalValue > 0 ? weightedPnl / totalValue : 0;
+        const myTopPositions = myPositions
+            .sort((a: any, b: any) => (b.percentPnl || 0) - (a.percentPnl || 0))
+            .slice(0, 5);
+        Logger.clearLine();
+        Logger.myPositions(ENV.PROXY_WALLET, myPositions.length, myTopPositions, myOverallPnl, totalValue, initialValue, currentBalance);
+    } else {
+        Logger.clearLine();
+        Logger.myPositions(ENV.PROXY_WALLET, 0, [], 0, 0, 0, currentBalance);
     }
 
-    // Show current positions count with details for traders you're copying
+    // Afficher les positions des traders surveillés
     const positionCounts: number[] = [];
     const positionDetails: any[][] = [];
     const profitabilities: number[] = [];
-    for (const { address, UserPosition } of userModels) {
-        const positions = await UserPosition.find().exec();
+    for (const positions of allTraderPositions) {
         positionCounts.push(positions.length);
-
-        // Calculate overall profitability (weighted average by current value)
         let totalValue = 0;
         let weightedPnl = 0;
         positions.forEach((pos) => {
@@ -92,15 +87,13 @@ const init = async () => {
             totalValue += value;
             weightedPnl += value * pnl;
         });
-        const overallPnl = totalValue > 0 ? weightedPnl / totalValue : 0;
-        profitabilities.push(overallPnl);
-
-        // Get top 3 positions by profitability (PnL)
-        const topPositions = positions
-            .sort((a, b) => (b.percentPnl || 0) - (a.percentPnl || 0))
-            .slice(0, 3)
-            .map((p) => p.toObject());
-        positionDetails.push(topPositions);
+        profitabilities.push(totalValue > 0 ? weightedPnl / totalValue : 0);
+        positionDetails.push(
+            positions
+                .sort((a, b) => (b.percentPnl || 0) - (a.percentPnl || 0))
+                .slice(0, 3)
+                .map((p) => p.toObject())
+        );
     }
     Logger.clearLine();
     Logger.tradersPositions(USER_ADDRESSES, positionCounts, positionDetails, profitabilities);
@@ -115,111 +108,147 @@ const processOneTrader = async (
     UserActivity: ReturnType<typeof getUserActivityModel>,
     UserPosition: ReturnType<typeof getUserPositionModel>
 ): Promise<void> => {
-    // Fetch trade activities from Polymarket API
+    // Fetch activities + positions en parallèle → économise ~1-2s par trader (2 appels → 1 aller)
     const apiUrl = `https://data-api.polymarket.com/activity?user=${address}&type=TRADE`;
-    const activities = await fetchData(apiUrl);
+    const positionsUrl = `https://data-api.polymarket.com/positions?user=${address}`;
+    const [activities, positions] = await Promise.all([
+        fetchData(apiUrl),
+        fetchData(positionsUrl).catch(() => []),  // positions non-critique si erreur
+    ]);
 
+    // Traiter les activités
     if (Array.isArray(activities) && activities.length > 0) {
-        // Process each activity
-        for (const activity of activities) {
-            // Skip if too old (but not on first run - we want to mark all historical trades)
-            // TOO_OLD_TIMESTAMP is in hours; activity.timestamp is Unix seconds
-            const cutoffTimestamp = Math.floor(Date.now() / 1000) - TOO_OLD_TIMESTAMP * 3600;
-            if (!isFirstRun && activity.timestamp < cutoffTimestamp) {
-                continue;
+        const cutoffTimestamp = Math.floor(Date.now() / 1000) - TOO_OLD_TIMESTAMP * 3600;
+
+        // Filtrer les activités trop anciennes — même au premier run.
+        // Les activités > TOO_OLD_TIMESTAMP heures ne seront jamais exécutées,
+        // donc inutile de les stocker en DB (évite de remplir 512MB au démarrage).
+        const relevantActivities = activities.filter((a) => a.timestamp >= cutoffTimestamp);
+
+        if (relevantActivities.length > 0) {
+            // Récupérer TOUS les hashes existants en UNE seule requête MongoDB
+            // → remplace N×findOne() par 1 find() + Set lookup en mémoire
+            const existingHashes = new Set<string>(
+                (await UserActivity.find(
+                    { transactionHash: { $in: relevantActivities.map((a) => a.transactionHash) } },
+                    { transactionHash: 1, _id: 0 }
+                ).lean().exec()).map((doc: any) => doc.transactionHash)
+            );
+
+            // Identifier les nouvelles activités
+            const newActivities = relevantActivities.filter(
+                (a) => !existingHashes.has(a.transactionHash)
+            );
+
+            if (newActivities.length > 0) {
+                // Construire les documents à insérer
+                const docs = newActivities.map((activity) => ({
+                    proxyWallet: activity.proxyWallet,
+                    timestamp: activity.timestamp,
+                    conditionId: activity.conditionId,
+                    type: activity.type,
+                    size: activity.size,
+                    usdcSize: activity.usdcSize,
+                    transactionHash: activity.transactionHash,
+                    price: activity.price,
+                    asset: activity.asset,
+                    side: activity.side,
+                    outcomeIndex: activity.outcomeIndex,
+                    title: activity.title,
+                    slug: activity.slug,
+                    icon: activity.icon,
+                    eventSlug: activity.eventSlug,
+                    outcome: activity.outcome,
+                    name: activity.name,
+                    pseudonym: activity.pseudonym,
+                    bio: activity.bio,
+                    profileImage: activity.profileImage,
+                    profileImageOptimized: activity.profileImageOptimized,
+                    bot: isFirstRun,
+                    botExcutedTime: isFirstRun ? 999 : 0,
+                }));
+
+                // Insérer tout d'un coup (ordered:false = continue si doublon inattendu)
+                if (isFirstRun) {
+                    await UserActivity.insertMany(docs, { ordered: false }).catch(() => {});
+                } else {
+                    // Hors premier run : insérer un par un (évite les erreurs de doublon en cascade)
+                    let slowTradeCount = 0;
+                    let maxDelaySec = 0;
+                    const nowSec = Math.floor(Date.now() / 1000);
+
+                    for (const doc of docs) {
+                        await new UserActivity(doc).save();
+
+                        // Comptabiliser les trades lents (non détectés par blockchain)
+                        const activity = newActivities.find((a) => a.transactionHash === doc.transactionHash)!;
+                        const delaySec = nowSec - activity.timestamp;
+                        if (delaySec > 180) {
+                            slowTradeCount++;
+                            if (delaySec > maxDelaySec) maxDelaySec = delaySec;
+                        }
+                    }
+
+                    // Un seul résumé par trader au lieu d'un log par trade (évite le flood)
+                    if (slowTradeCount > 0) {
+                        const maxDelayStr = `${Math.floor(maxDelaySec / 60)}m${(maxDelaySec % 60).toString().padStart(2, '0')}s`;
+                        const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
+                        Logger.warning(
+                            `🐢 REST API seul (blockchain raté): ${slowTradeCount} trade(s) en retard, max ${maxDelayStr} (${shortAddr})`
+                        );
+                    }
+                }
             }
-
-            // Check if this trade already exists in database
-            const existingActivity = await UserActivity.findOne({
-                transactionHash: activity.transactionHash,
-            }).exec();
-
-            if (existingActivity) {
-                continue; // Already processed this trade
-            }
-
-            // Save new trade to database.
-            // During first run: mark immediately as processed (bot: true) to avoid
-            // the race condition where tradeExecutor picks them up before updateMany runs.
-            const newActivity = new UserActivity({
-                proxyWallet: activity.proxyWallet,
-                timestamp: activity.timestamp,
-                conditionId: activity.conditionId,
-                type: activity.type,
-                size: activity.size,
-                usdcSize: activity.usdcSize,
-                transactionHash: activity.transactionHash,
-                price: activity.price,
-                asset: activity.asset,
-                side: activity.side,
-                outcomeIndex: activity.outcomeIndex,
-                title: activity.title,
-                slug: activity.slug,
-                icon: activity.icon,
-                eventSlug: activity.eventSlug,
-                outcome: activity.outcome,
-                name: activity.name,
-                pseudonym: activity.pseudonym,
-                bio: activity.bio,
-                profileImage: activity.profileImage,
-                profileImageOptimized: activity.profileImageOptimized,
-                bot: isFirstRun,             // true during init = already processed
-                botExcutedTime: isFirstRun ? 999 : 0,
-            });
-
-            await newActivity.save();
-            // Note: le log "New trade detected" est volontairement supprimé ici.
-            // L'executor affiche déjà "⚡ N NEW TRADES TO COPY" avec tous les détails.
         }
     }
 
-    // Also fetch and update positions
-    const positionsUrl = `https://data-api.polymarket.com/positions?user=${address}`;
-    const positions = await fetchData(positionsUrl);
-
+    // Mise à jour des positions — bulkWrite au lieu de N × findOneAndUpdate séquentiels
+    // Exemple: trader avec 95 positions : ~5s → ~100ms (1 seul aller MongoDB)
     if (Array.isArray(positions) && positions.length > 0) {
-        for (const position of positions) {
-            // Update or create position
-            await UserPosition.findOneAndUpdate(
-                { asset: position.asset, conditionId: position.conditionId },
-                {
-                    proxyWallet: position.proxyWallet,
-                    asset: position.asset,
-                    conditionId: position.conditionId,
-                    size: position.size,
-                    avgPrice: position.avgPrice,
-                    initialValue: position.initialValue,
-                    currentValue: position.currentValue,
-                    cashPnl: position.cashPnl,
-                    percentPnl: position.percentPnl,
-                    totalBought: position.totalBought,
-                    realizedPnl: position.realizedPnl,
-                    percentRealizedPnl: position.percentRealizedPnl,
-                    curPrice: position.curPrice,
-                    redeemable: position.redeemable,
-                    mergeable: position.mergeable,
-                    title: position.title,
-                    slug: position.slug,
-                    icon: position.icon,
-                    eventSlug: position.eventSlug,
-                    outcome: position.outcome,
-                    outcomeIndex: position.outcomeIndex,
-                    oppositeOutcome: position.oppositeOutcome,
-                    oppositeAsset: position.oppositeAsset,
-                    endDate: position.endDate,
-                    negativeRisk: position.negativeRisk,
+        const bulkOps = positions.map((position: any) => ({
+            updateOne: {
+                filter: { asset: position.asset, conditionId: position.conditionId },
+                update: {
+                    $set: {
+                        proxyWallet: position.proxyWallet,
+                        asset: position.asset,
+                        conditionId: position.conditionId,
+                        size: position.size,
+                        avgPrice: position.avgPrice,
+                        initialValue: position.initialValue,
+                        currentValue: position.currentValue,
+                        cashPnl: position.cashPnl,
+                        percentPnl: position.percentPnl,
+                        totalBought: position.totalBought,
+                        realizedPnl: position.realizedPnl,
+                        percentRealizedPnl: position.percentRealizedPnl,
+                        curPrice: position.curPrice,
+                        redeemable: position.redeemable,
+                        mergeable: position.mergeable,
+                        title: position.title,
+                        slug: position.slug,
+                        icon: position.icon,
+                        eventSlug: position.eventSlug,
+                        outcome: position.outcome,
+                        outcomeIndex: position.outcomeIndex,
+                        oppositeOutcome: position.oppositeOutcome,
+                        oppositeAsset: position.oppositeAsset,
+                        endDate: position.endDate,
+                        negativeRisk: position.negativeRisk,
+                    },
                 },
-                { upsert: true }
-            );
-        }
+                upsert: true,
+            },
+        }));
+        await UserPosition.bulkWrite(bulkOps, { ordered: false });
     }
 };
 
 /**
  * Fetch data for all traders in parallel batches.
- * Anciennement séquentiel (63 × ~300ms = ~19s), maintenant ~2-3s avec batches de 8.
+ * Anciennement séquentiel (63 × ~300ms = ~19s), maintenant ~5-10s avec batches de 16 + fetch parallèle + bulkWrite positions.
  */
-const FETCH_BATCH_SIZE = 8;      // traders traités en parallèle par batch
+const FETCH_BATCH_SIZE = 16;     // traders traités en parallèle par batch (était 8 → 5 batches au lieu de 9)
 const FETCH_BATCH_DELAY_MS = 150; // délai entre batches pour éviter le rate limit
 
 const fetchTradeData = async () => {
@@ -252,10 +281,13 @@ const fetchTradeData = async () => {
         }
     }
 
-    // Log le temps de cycle (seulement si > 3s pour ne pas spammer)
+    // Log le temps de cycle seulement si vraiment lent (seuil dynamique selon le nombre de traders).
+    // Formule : chaque trader = ~0.4s théorique (2 API calls en batch), + 30% de marge.
+    // Exemple : 69 traders → seuil = max(20, 69×0.4×1.3) = max(20, 35.9) = 36s
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    if (!isFirstRun && parseFloat(elapsed) > 3) {
-        Logger.info(`⏱ Fetch cycle: ${elapsed}s (${userModels.length} traders, batches de ${FETCH_BATCH_SIZE})`);
+    const slowThreshold = Math.max(20, userModels.length * 0.4 * 1.3);
+    if (!isFirstRun && parseFloat(elapsed) > slowThreshold) {
+        Logger.warning(`⚠️ Fetch cycle lent: ${elapsed}s (${userModels.length} traders, batches de ${FETCH_BATCH_SIZE})`);
     }
 };
 
@@ -269,6 +301,36 @@ let lastStaleCheckTime = 0;
 let lastSmallPositionCheckTime = 0;
 // Track last expiring position check time
 let lastExpiringCheckTime = 0;
+// Track last auto-cleanup time
+let lastAutoCleanupTime = 0;
+
+/**
+ * Nettoyage automatique MongoDB — supprime les trades déjà traités.
+ * S'exécute toutes les 6h pendant que le bot tourne.
+ * Évite que la DB Atlas (512MB gratuit) se remplisse.
+ */
+const autoCleanupMongo = async () => {
+    const now = Date.now();
+    const SIX_HOURS = 6 * 60 * 60 * 1000;
+
+    if (lastAutoCleanupTime > 0 && (now - lastAutoCleanupTime) < SIX_HOURS) return;
+    lastAutoCleanupTime = now;
+
+    const cutoff7days = Math.floor(Date.now() / 1000) - 7 * 24 * 3600;
+    let totalDeleted = 0;
+
+    for (const { UserActivity } of userModels) {
+        const [r1, r2] = await Promise.all([
+            UserActivity.deleteMany({ bot: true }),
+            UserActivity.deleteMany({ bot: false, timestamp: { $lt: cutoff7days } }),
+        ]);
+        totalDeleted += r1.deletedCount + r2.deletedCount;
+    }
+
+    if (totalDeleted > 0) {
+        Logger.info(`🧹 Auto-nettoyage MongoDB : ${totalDeleted} documents supprimés`);
+    }
+};
 
 /**
  * Check and auto-sell positions that are expiring soon (1 day before market close)
@@ -699,25 +761,57 @@ const tradeMonitor = async () => {
     //  as unprocessed even though they could be hours old.)
     if (isFirstRun) {
         Logger.info('First run: fetching current API state (all trades saved as already processed)...');
-        await fetchTradeData(); // isFirstRun=true → trades saved directly as bot:true, no age filter
-        for (const { address, UserActivity } of userModels) {
-            const count = await UserActivity.updateMany(
-                { bot: false },
-                { $set: { bot: true, botExcutedTime: 999 } }
-            );
-            if (count.modifiedCount > 0) {
-                Logger.info(
-                    `Marked ${count.modifiedCount} historical trades as processed for ${address.slice(0, 6)}...${address.slice(-4)}`
-                );
-            }
-        }
+
+        // Timeout de 60s : avec 63+ traders l'API Polymarket peut être lente ou rate-limiter.
+        // Après 60s on continue quand même — le updateMany ci-dessous marque tout comme traité.
+        const FIRST_RUN_TIMEOUT_MS = 60_000;
+        await Promise.race([
+            fetchTradeData(),
+            new Promise<void>(resolve =>
+                setTimeout(() => {
+                    Logger.warning(`⏰ First run fetch timeout (${FIRST_RUN_TIMEOUT_MS / 1000}s) — proceeding with updateMany fallback`);
+                    resolve();
+                }, FIRST_RUN_TIMEOUT_MS)
+            )
+        ]);
+
+        // Paralléliser les updateMany (était séquentiel × 69 traders → un seul aller MongoDB en parallèle)
+        const markResults = await Promise.all(
+            userModels.map(({ UserActivity }) =>
+                UserActivity.updateMany(
+                    { bot: false },
+                    { $set: { bot: true, botExcutedTime: 999 } }
+                )
+            )
+        );
+        const totalMarked = markResults.reduce((sum, r) => sum + r.modifiedCount, 0);
         isFirstRun = false;
-        Logger.success('\nHistorical trades processed. Now monitoring for new trades only.');
+        Logger.success(`\nHistorical trades processed (${totalMarked} marqués). Now monitoring for new trades only.`);
         Logger.separator();
     }
 
     // Signale que l'initialisation est terminée → tradeExecutor peut démarrer
     _resolveFirstRun();
+
+    // Passage de nettoyage supplémentaire : attrape les trades qui ont glissé entre le
+    // timeout du firstRun fetch (60s) et le démarrage du loop normal (race condition).
+    // Exécuté en arrière-plan — ne bloque pas le loop.
+    setTimeout(async () => {
+        try {
+            const results = await Promise.all(
+                userModels.map(({ UserActivity }) =>
+                    UserActivity.updateMany(
+                        { bot: false },
+                        { $set: { bot: true, botExcutedTime: 999 } }
+                    )
+                )
+            );
+            const extra = results.reduce((s, r) => s + r.modifiedCount, 0);
+            if (extra > 0) {
+                Logger.info(`🧹 Nettoyage post-démarrage : ${extra} trade(s) ancien(s) supplémentaire(s) marqués`);
+            }
+        } catch { /* non-bloquant */ }
+    }, 5_000); // 5s après firstRun pour capturer les trades tardifs
 
     while (isRunning) {
         await fetchTradeData();
@@ -730,7 +824,10 @@ const tradeMonitor = async () => {
         
         // Check for positions expiring soon (1 day before market close)
         await checkAndSellExpiringPositions();
-        
+
+        // Nettoyage automatique MongoDB toutes les 6h
+        await autoCleanupMongo();
+
         if (!isRunning) break;
         await new Promise((resolve) => setTimeout(resolve, FETCH_INTERVAL * 1000));
     }

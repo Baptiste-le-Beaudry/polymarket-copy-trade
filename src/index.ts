@@ -1,8 +1,12 @@
 import connectDB, { closeDB } from './config/db';
-import { ENV } from './config/env';
+import { ENV, reloadDynamicEnv } from './config/env';
+import * as fs from 'fs';
+import * as path from 'path';
 import createClobClient from './utils/createClobClient';
 import tradeExecutor, { stopTradeExecutor } from './services/tradeExecutor';
 import tradeMonitor, { stopTradeMonitor, firstRunComplete } from './services/tradeMonitor';
+import blockchainMonitor, { stopBlockchainMonitor, restartBlockchainMonitor, getBlockchainStatus } from './services/blockchainMonitor';
+import mempoolMonitor, { stopMempoolMonitor, getMempoolStatus } from './services/mempoolMonitor';
 import Logger from './utils/logger';
 import { performHealthCheck, logHealthCheck } from './utils/healthCheck';
 import test from './test/test';
@@ -14,6 +18,9 @@ import * as readline from 'readline';
 import { AssetType, Side, OrderType } from '@polymarket/clob-client';
 import fetchData from './utils/fetchData';
 import { displayLiveComparison } from './utils/livePositionComparison';
+import { scanForDipOpportunities, DIP_FOLLOW_INTERVAL_MINUTES } from './services/positionDipFollower';
+import { startTelegramWhaleMonitor, stopTelegramWhaleMonitor } from './services/telegramWhaleMonitor';
+import { stopLimitOrderWatcher } from './utils/simulationExecutor';
 
 const USER_ADDRESSES = ENV.USER_ADDRESSES;
 const PROXY_WALLET = ENV.PROXY_WALLET;
@@ -444,6 +451,7 @@ const setupKeyboardListener = () => {
     // Handle SIGINT (Ctrl+C) at process level - most reliable
     process.on('SIGINT', () => {
         console.log('\n👋 Ctrl+C detected - Exiting immediately...');
+        stopLimitOrderWatcher();
         process.exit(0);
     });
     
@@ -501,6 +509,17 @@ const setupKeyboardListener = () => {
                     return;
                 }
                 
+                // Handle 'r' key to hot-reload .env config
+                if (key.name === 'r') {
+                    isProcessingKeypress = true;
+                    Logger.separator();
+                    Logger.info('🔄 Rechargement manuel de la config (.env)...');
+                    reloadDynamicEnv();
+                    Logger.separator();
+                    isProcessingKeypress = false;
+                    return;
+                }
+
                 // Handle 's' key to sell all positions
                 if (key.name === 's') {
                     isProcessingKeypress = true;
@@ -538,9 +557,28 @@ const setupKeyboardListener = () => {
     };
     
     const keyboardEnabled = setupRawMode();
-    
+
     if (keyboardEnabled) {
-        Logger.info('⌨️ Press "l" to list positions, "s" to sell all, "b" to reset circuit breaker, Ctrl+C to quit');
+        Logger.info('⌨️  l=positions | s=vendre tout | b=circuit breaker | r=recharger config | Ctrl+C=quitter');
+    }
+
+    // Watcher automatique : recharge la config si .env est modifié pendant l'exécution
+    try {
+        const envPath = path.resolve('.env');
+        let reloadDebounce: NodeJS.Timeout | null = null;
+        fs.watch(envPath, (event) => {
+            if (event === 'change') {
+                // Debounce : évite les doubles déclenchements sur certains éditeurs
+                if (reloadDebounce) clearTimeout(reloadDebounce);
+                reloadDebounce = setTimeout(() => {
+                    Logger.info('📁 .env modifié — rechargement automatique...');
+                    reloadDynamicEnv();
+                }, 300);
+            }
+        });
+        Logger.info('👁️  Hot-reload actif : modifie .env pour changer les paramètres sans redémarrer');
+    } catch {
+        // Non-bloquant — hot-reload optionnel
     }
 };
 
@@ -558,7 +596,10 @@ const gracefulShutdown = async (signal: string) => {
         // Stop services
         stopTradeMonitor();
         stopTradeExecutor();
-        
+        stopBlockchainMonitor();
+        stopMempoolMonitor();
+        stopTelegramWhaleMonitor().catch(() => {});
+
         // Stop position monitoring if running
         stopPositionMonitoring();
 
@@ -611,6 +652,15 @@ process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) =>
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
+    // Bug connu ethers.js v5 WebSocketProvider : "Cannot read properties of undefined (reading 'callback')"
+    // Se produit quand de nombreux events blockchain arrivent simultanément et désynchronisent
+    // la map interne de callbacks. On reconnecte simplement le WebSocket sans arrêter le bot.
+    if (error.message?.includes("Cannot read properties of undefined (reading 'callback')")) {
+        Logger.warning(`⚡ BLOCKCHAIN: Erreur interne ethers.js (bug connu) — reconnexion dans 3s`);
+        setTimeout(() => restartBlockchainMonitor(), 3000);
+        return;
+    }
+
     Logger.error(`Uncaught Exception: ${error.message}`);
     // Exit immediately for uncaught exceptions as the application is in an undefined state
     gracefulShutdown('uncaughtException').catch(() => {
@@ -708,9 +758,42 @@ export const main = async () => {
         Logger.info('Starting trade executor...');
         tradeExecutor(clobClient);
 
+        // Démarrer le monitoring blockchain (si POLYGON_WS_URL est configuré)
+        // Détecte les trades on-chain ~3s après l'achat du trader
+        // vs ~20-70s avec le polling REST seul.
+        // Fonctionne en PARALLÈLE du polling REST (double filet de sécurité).
+        blockchainMonitor().catch(err =>
+            Logger.error(`Blockchain monitor erreur fatale: ${(err as Error).message}`)
+        );
+
+        // Démarrer le monitoring mempool (Alchemy uniquement)
+        // Détecte les trades AVANT la confirmation du bloc (~2s plus tôt que blockchain).
+        // Nécessite POLYGON_WS_URL=wss://...alchemy.com/... — sinon désactivé silencieusement.
+        mempoolMonitor().catch(err =>
+            Logger.error(`Mempool monitor erreur fatale: ${(err as Error).message}`)
+        );
+
         // Start automatic position alignment monitoring (hourly cleanup)
         Logger.info('Starting position alignment monitoring...');
         await startPositionMonitoring();
+
+        // Démarrer le dip follower si activé
+        if (ENV.DIP_FOLLOW_ENABLED) {
+            Logger.info(`📉 Démarrage du DIP FOLLOWER (scan toutes les ${DIP_FOLLOW_INTERVAL_MINUTES} min)...`);
+            // Premier scan après 2 minutes (laisser le temps au bot de s'initialiser)
+            setTimeout(async () => {
+                await scanForDipOpportunities(clobClient);
+                setInterval(
+                    () => scanForDipOpportunities(clobClient),
+                    DIP_FOLLOW_INTERVAL_MINUTES * 60 * 1000
+                );
+            }, 2 * 60 * 1000);
+        }
+
+        // Démarrer le monitor Telegram whale (si configuré dans .env)
+        startTelegramWhaleMonitor().catch(err =>
+            Logger.warning(`📱 Telegram whale monitor: ${(err as Error).message}`)
+        );
 
         // Setup keyboard listener for 's' key
         setupKeyboardListener();
@@ -756,12 +839,28 @@ export const main = async () => {
                 simTracker.recordSnapshot(); // Force un snapshot même sans positions (requis pour le graphique)
                 simTracker.printSummary();
                 simTracker.generateChart();
+
+                // Mise à jour des rapports (écrase le fichier précédent)
+                simTracker.generateTextReport();
+                simTracker.generateHTMLReport();
+
+                // Statut blockchain affiché avec le graphique
+                const bcStatus = getBlockchainStatus();
+                if (bcStatus.connected) {
+                    Logger.success(
+                        `⚡ BLOCKCHAIN: ✅ Connecté (${bcStatus.tradeCount} trade(s) détecté(s)) — ${bcStatus.url}`
+                    );
+                } else {
+                    Logger.warning(
+                        `⚡ BLOCKCHAIN: ❌ Non connecté — trades détectés via REST uniquement (lent ~20-70s)`
+                    );
+                }
             }, 5 * 60 * 1000); // Every 5 minutes
 
-            // Live position comparison every 5 minutes (after 2 min warmup)
+            // Live position comparison every 30 minutes (après 2 min warmup)
             setTimeout(() => {
                 displayLiveComparison();
-                setInterval(() => displayLiveComparison(), 5 * 60 * 1000);
+                setInterval(() => displayLiveComparison(), 30 * 60 * 1000);
             }, 2 * 60 * 1000);
         } else {
             // Real trading mode - periodic balance update for circuit breaker
@@ -943,10 +1042,10 @@ export const main = async () => {
             setTimeout(printRealMoneySummary, 1 * 60 * 1000); // First display after 1 minute
             setInterval(printRealMoneySummary, 5 * 60 * 1000); // Then every 5 minutes
 
-            // Live position comparison every 5 minutes (after 2 min warmup)
+            // Live position comparison every 30 minutes (après 2 min warmup)
             setTimeout(() => {
                 displayLiveComparison();
-                setInterval(() => displayLiveComparison(), 5 * 60 * 1000);
+                setInterval(() => displayLiveComparison(), 30 * 60 * 1000);
             }, 2 * 60 * 1000);
 
             // Sync position allowances every 24 hours (prevents "not enough balance/allowance" sell errors)

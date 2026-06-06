@@ -1,0 +1,215 @@
+# Polymarket Trader Finder — 2026-03-19
+# 34 traders copiables sur 120 analysés
+# Filtre : avg_buy_price < $0.45 | Lookback: 30 jours
+# Trié par score de copiabilité décroissant
+
+─── #1 0x51fd8f0358cc9e8a1ee5f87a0c7e3b07ed634272 (Enchanted-Plaintiff)
+    Classification : POSITIONAL | Copiable: true | Score: 98.0
+    Prix moy: $0.006 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$19948 | Open: $-64721 | Trades: 100 | Marchés: 4
+    IA: Prix moyen $0.01, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #2 0x4d55b280a8e7801c5612f7ecfb32764b25123715 (Growling-Daybed)
+    Classification : POSITIONAL | Copiable: true | Score: 82.0
+    Prix moy: $0.073 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $0 | Trades: 13 | Marchés: 6
+    IA: Prix moyen $0.07, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #3 0x162e0ed01a0e487beded744e5289f7b2521afe52 (Dry-Instance)
+    Classification : POSITIONAL | Copiable: true | Score: 81.8
+    Prix moy: $0.075 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: -$3 | Open: $-0 | Trades: 100 | Marchés: 23
+    IA: Prix moyen $0.07, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #4 0x7b9b968a5c00c1c74b4f00e2b2cc07976f60dc51 (Piercing-Footage)
+    Classification : POSITIONAL | Copiable: true | Score: 71.9
+    Prix moy: $0.187 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-15 | Trades: 12 | Marchés: 5
+    IA: Prix moyen $0.19, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #5 0x58ac361a74c50a331b91b2db2eaefe4f2d127636 (Shady-Closure)
+    Classification : POSITIONAL | Copiable: true | Score: 70.9
+    Prix moy: $0.198 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: -$10 | Open: $-57 | Trades: 100 | Marchés: 2
+    IA: Prix moyen $0.20, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #6 0xfa6f0451da4bbc18b53329d0d8e6ed891bc91775 (Dark-Tendency)
+    Classification : POSITIONAL | Copiable: true | Score: 70.7
+    Prix moy: $0.200 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: -$1 | Open: $-0 | Trades: 9 | Marchés: 1
+    IA: Prix moyen $0.20, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #7 0x39c153c3d4bc1a0cf26a7c64390221cfbf66c705 (Better-Lettuce)
+    Classification : POSITIONAL | Copiable: true | Score: 70.3
+    Prix moy: $0.205 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: -$1 | Open: $-0 | Trades: 49 | Marchés: 25
+    IA: Prix moyen $0.20, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #8 0x6f6618a0aa7d46dddd2235145651bb8c7173c01b (Bruised-Separation)
+    Classification : POSITIONAL | Copiable: true | Score: 69.1
+    Prix moy: $0.218 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: -$21 | Open: $-36 | Trades: 100 | Marchés: 25
+    IA: Prix moyen $0.22, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #9 0xdba6520e08c595ada346190a01899d9c6617fd3b (Terrible-Witch)
+    Classification : POSITIONAL | Copiable: true | Score: 69.0
+    Prix moy: $0.220 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-36 | Trades: 100 | Marchés: 7
+    IA: Prix moyen $0.22, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #10 0xe74efc2829a24b8d906b282407181bd3655e1ab9 (Ugly-Tambourine)
+    Classification : POSITIONAL | Copiable: true | Score: 67.7
+    Prix moy: $0.216 | % <$0.70: 93% | % résolutions rapides: 0%
+    P&L réalisé: -$2 | Open: $-0 | Trades: 100 | Marchés: 25
+    IA: Prix moyen $0.22, 93% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #11 0x87a428b448bce43ea768a06d4fce763e7de2c980 (Well-Off-Fringe)
+    Classification : POSITIONAL | Copiable: true | Score: 67.0
+    Prix moy: $0.224 | % <$0.70: 94% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-5 | Trades: 31 | Marchés: 24
+    IA: Prix moyen $0.22, 94% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #12 0xd178c8815e84c4ffe9de5f2ef38a5f9eab543834 (Wealthy-Artificer)
+    Classification : POSITIONAL | Copiable: true | Score: 64.9
+    Prix moy: $0.227 | % <$0.70: 86% | % résolutions rapides: 0%
+    P&L réalisé: -$0 | Open: $-0 | Trades: 100 | Marchés: 10
+    IA: Prix moyen $0.23, 86% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #13 0x90aa5b21e3fea96e69a7d9fbb3133c728c201f2c (Dutiful-Thirst)
+    Classification : POSITIONAL | Copiable: true | Score: 64.4
+    Prix moy: $0.239 | % <$0.70: 89% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $0 | Trades: 100 | Marchés: 21
+    IA: Prix moyen $0.24, 89% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #14 0x2e8aa4435332f0b128deb4636cd6df985df46a3c (Jubilant-Record)
+    Classification : POSITIONAL | Copiable: true | Score: 61.6
+    Prix moy: $0.302 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-25 | Trades: 9 | Marchés: 8
+    IA: Prix moyen $0.30, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #15 0x40fe0b2d5f9625c13bd19c6972ff738451f002c3
+    Classification : POSITIONAL | Copiable: true | Score: 61.6
+    Prix moy: $0.291 | % <$0.70: 96% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-6 | Trades: 28 | Marchés: 24
+    IA: Prix moyen $0.29, 96% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #16 0x4ae54b69df29c086921c7a3a6b8bca64c7fcc881 (Male-Offramp)
+    Classification : POSITIONAL | Copiable: true | Score: 60.8
+    Prix moy: $0.303 | % <$0.70: 97% | % résolutions rapides: 0%
+    P&L réalisé: -$13 | Open: $1 | Trades: 100 | Marchés: 36
+    IA: Prix moyen $0.30, 97% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #17 0x1c2d27f2c17716c5ae18e0f157d9dc1b5bbbb829 (Exemplary-Pagoda)
+    Classification : POSITIONAL | Copiable: true | Score: 60.7
+    Prix moy: $0.277 | % <$0.70: 88% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-0 | Trades: 9 | Marchés: 8
+    IA: Prix moyen $0.28, 88% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #18 0xc538b519e0dab4c69514c588e73076af1ea3c555 (Indolent-Cummerbund)
+    Classification : POSITIONAL | Copiable: true | Score: 60.4
+    Prix moy: $0.299 | % <$0.70: 94% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $46 | Trades: 100 | Marchés: 57
+    IA: Prix moyen $0.30, 94% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #19 0xe4ca3841ade21e05cbd5786dd5feea5d65c01383 (Orderly-Dentist)
+    Classification : POSITIONAL | Copiable: true | Score: 59.0
+    Prix moy: $0.334 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$111 | Open: $-962 | Trades: 100 | Marchés: 28
+    IA: Prix moyen $0.33, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #20 0xb69b05b25fa7a4e01569664f7eb6500ebfde3daf (Teeming-Bartender)
+    Classification : POSITIONAL | Copiable: true | Score: 58.9
+    Prix moy: $0.333 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-1 | Trades: 9 | Marchés: 9
+    IA: Prix moyen $0.33, 100% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #21 0x8e6bd19b50b9b97e0cf183b338348546959d2ffc (Submissive-Ale)
+    Classification : POSITIONAL | Copiable: true | Score: 57.5
+    Prix moy: $0.303 | % <$0.70: 84% | % résolutions rapides: 0%
+    P&L réalisé: +$7 | Open: $0 | Trades: 100 | Marchés: 29
+    IA: Prix moyen $0.30, 84% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #22 0x817c4c3f0fbab46c5d549e3f77a29707b42ec2c7
+    Classification : POSITIONAL | Copiable: true | Score: 55.9
+    Prix moy: $0.351 | % <$0.70: 94% | % résolutions rapides: 0%
+    P&L réalisé: -$117 | Open: $4 | Trades: 100 | Marchés: 17
+    IA: Prix moyen $0.35, 94% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #23 0x2f736901da77bfc32e637e87d47ba8eb294396f9 (Moist-Larch)
+    Classification : POSITIONAL | Copiable: true | Score: 53.9
+    Prix moy: $0.373 | % <$0.70: 94% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-14 | Trades: 89 | Marchés: 81
+    IA: Prix moyen $0.37, 94% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #24 0x9bd9278fd0c553ac829bc6c798e263a7c8b0f916 (Taut-Joy)
+    Classification : POSITIONAL | Copiable: true | Score: 53.2
+    Prix moy: $0.341 | % <$0.70: 80% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $0 | Trades: 5 | Marchés: 5
+    IA: Prix moyen $0.34, 80% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #25 0xb2a2d9524623a46f25fbe9e45250f4d1960f9f1e (Dry-Prince)
+    Classification : POSITIONAL | Copiable: true | Score: 52.9
+    Prix moy: $0.348 | % <$0.70: 81% | % résolutions rapides: 0%
+    P&L réalisé: -$5 | Open: $-400 | Trades: 100 | Marchés: 44
+    IA: Prix moyen $0.35, 81% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #26 0x5fc1fa444ebd90313f1c452e516cc22d51139e5e (Grubby-Commodity)
+    Classification : POSITIONAL | Copiable: true | Score: 52.4
+    Prix moy: $0.372 | % <$0.70: 88% | % résolutions rapides: 0%
+    P&L réalisé: -$3 | Open: $-0 | Trades: 47 | Marchés: 21
+    IA: Prix moyen $0.37, 88% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #27 0x1172707fccc1a82e9cc9b642d67a6df67c7fe8c9 (Inferior-Fall)
+    Classification : POSITIONAL | Copiable: true | Score: 50.7
+    Prix moy: $0.399 | % <$0.70: 90% | % résolutions rapides: 0%
+    P&L réalisé: +$1 | Open: $-192 | Trades: 27 | Marchés: 17
+    IA: Prix moyen $0.40, 90% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #28 0xa4ae0d4050f0ae7096a9aa3ecf4c09d33a0acb6d (Squeaky-Probability)
+    Classification : MIXED | Copiable: true | Score: 50.1
+    Prix moy: $0.415 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-2 | Trades: 83 | Marchés: 2
+    IA: Profil mixte — prix moyen $0.42, 0% résolutions rapides.
+
+─── #29 0x5ad203d0d4a722c407e4ee21efe3807ab109db53
+    Classification : POSITIONAL | Copiable: true | Score: 48.9
+    Prix moy: $0.371 | % <$0.70: 73% | % résolutions rapides: 0%
+    P&L réalisé: -$0 | Open: $0 | Trades: 25 | Marchés: 10
+    IA: Prix moyen $0.37, 73% sous $0.70, peu de résolutions rapides — pattern positionnel.
+
+─── #30 0x78a12e9c94cd811179363151535ae70b84723f1a
+    Classification : MIXED | Copiable: true | Score: 48.8
+    Prix moy: $0.430 | % <$0.70: 100% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-5 | Trades: 7 | Marchés: 3
+    IA: Profil mixte — prix moyen $0.43, 0% résolutions rapides.
+
+─── #31 0x90d1161b78f3ee5845666a4ebe59256a7dab85d5 (Livid-Adapter)
+    Classification : MIXED | Copiable: true | Score: 48.7
+    Prix moy: $0.425 | % <$0.70: 98% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $0 | Trades: 100 | Marchés: 33
+    IA: Profil mixte — prix moyen $0.42, 0% résolutions rapides.
+
+─── #32 0x1c266db0f8529b1f25b77123e9c0c918ac2f6e31 (Jam-Packed-Peace)
+    Classification : MIXED | Copiable: true | Score: 48.0
+    Prix moy: $0.401 | % <$0.70: 79% | % résolutions rapides: 0%
+    P&L réalisé: +$907 | Open: $-4575 | Trades: 100 | Marchés: 51
+    IA: Profil mixte — prix moyen $0.40, 0% résolutions rapides.
+
+─── #33 0x2a46cf25ee539c80fb4c1fa24f6b00c629326490
+    Classification : MIXED | Copiable: true | Score: 46.1
+    Prix moy: $0.445 | % <$0.70: 95% | % résolutions rapides: 0%
+    P&L réalisé: +$0 | Open: $-30 | Trades: 100 | Marchés: 21
+    IA: Profil mixte — prix moyen $0.44, 0% résolutions rapides.
+
+─── #34 0x4fce6d3bd5d8ab2d84e66e52e8468414f7e6c90e
+    Classification : MIXED | Copiable: true | Score: 40.4
+    Prix moy: $0.429 | % <$0.70: 66% | % résolutions rapides: 0%
+    P&L réalisé: -$1 | Open: $0 | Trades: 62 | Marchés: 29
+    IA: Profil mixte — prix moyen $0.43, 0% résolutions rapides.
+
+
+══════════════════════════════════════════════════════════
+CONFIG .env RECOMMANDÉE (traders copiables, score >= 40)
+══════════════════════════════════════════════════════════
+
+USER_ADDRESSES='0x51fd8f0358cc9e8a1ee5f87a0c7e3b07ed634272, 0x4d55b280a8e7801c5612f7ecfb32764b25123715, 0x162e0ed01a0e487beded744e5289f7b2521afe52, 0x7b9b968a5c00c1c74b4f00e2b2cc07976f60dc51, 0x58ac361a74c50a331b91b2db2eaefe4f2d127636, 0xfa6f0451da4bbc18b53329d0d8e6ed891bc91775, 0x39c153c3d4bc1a0cf26a7c64390221cfbf66c705, 0x6f6618a0aa7d46dddd2235145651bb8c7173c01b, 0xdba6520e08c595ada346190a01899d9c6617fd3b, 0xe74efc2829a24b8d906b282407181bd3655e1ab9, 0x87a428b448bce43ea768a06d4fce763e7de2c980, 0xd178c8815e84c4ffe9de5f2ef38a5f9eab543834, 0x90aa5b21e3fea96e69a7d9fbb3133c728c201f2c, 0x2e8aa4435332f0b128deb4636cd6df985df46a3c, 0x40fe0b2d5f9625c13bd19c6972ff738451f002c3, 0x4ae54b69df29c086921c7a3a6b8bca64c7fcc881, 0x1c2d27f2c17716c5ae18e0f157d9dc1b5bbbb829, 0xc538b519e0dab4c69514c588e73076af1ea3c555, 0xe4ca3841ade21e05cbd5786dd5feea5d65c01383, 0xb69b05b25fa7a4e01569664f7eb6500ebfde3daf, 0x8e6bd19b50b9b97e0cf183b338348546959d2ffc, 0x817c4c3f0fbab46c5d549e3f77a29707b42ec2c7, 0x2f736901da77bfc32e637e87d47ba8eb294396f9, 0x9bd9278fd0c553ac829bc6c798e263a7c8b0f916, 0xb2a2d9524623a46f25fbe9e45250f4d1960f9f1e, 0x5fc1fa444ebd90313f1c452e516cc22d51139e5e, 0x1172707fccc1a82e9cc9b642d67a6df67c7fe8c9, 0xa4ae0d4050f0ae7096a9aa3ecf4c09d33a0acb6d, 0x5ad203d0d4a722c407e4ee21efe3807ab109db53, 0x78a12e9c94cd811179363151535ae70b84723f1a, 0x90d1161b78f3ee5845666a4ebe59256a7dab85d5, 0x1c266db0f8529b1f25b77123e9c0c918ac2f6e31, 0x2a46cf25ee539c80fb4c1fa24f6b00c629326490, 0x4fce6d3bd5d8ab2d84e66e52e8468414f7e6c90e'

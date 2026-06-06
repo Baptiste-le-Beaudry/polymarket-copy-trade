@@ -64,6 +64,8 @@ const activitySchema = new Schema({
     botExcutedTime: { type: Number, required: false },
     executedAt: { type: Number, required: false },    // Unix ms when the bot actually executed this trade
     myBoughtSize: { type: Number, required: false }, // Tracks actual tokens we bought
+    // TTL : MongoDB supprime automatiquement les documents après 30 jours
+    createdAt: { type: Date, default: Date.now, expires: 30 * 24 * 3600 },
 });
 
 const getUserPositionModel = (walletAddress: string) => {

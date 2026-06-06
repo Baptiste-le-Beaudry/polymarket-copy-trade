@@ -10,6 +10,7 @@ import { getPositionTracker } from './positionTracker';
 import { logBotEvent, isTradeAllowed, getCircuitBreakerReason } from './logAnalyzer';
 import { executeSimulatedTrade } from './simulationExecutor';
 import fetchData from './fetchData';
+import { rejectAsset } from './rejectedAssetCache';
 
 /**
  * Vérifie ce que le marché faisait au moment exact où le trader a exécuté son trade.
@@ -20,21 +21,167 @@ import fetchData from './fetchData';
  */
 const logMarketPriceAtTraderTime = async (asset: string, traderTimestamp: number, traderPrice: number): Promise<void> => {
     try {
-        const url = `https://clob.polymarket.com/trades?token_id=${asset}&after=${traderTimestamp - 60}&before=${traderTimestamp + 60}&limit=5`;
-        const data = await fetchData(url) as Array<{ price: string; side: string }>;
-        if (!Array.isArray(data) || data.length === 0) {
-            Logger.info(`🕐 Marché au moment du trade : aucune transaction CLOB dans ±60s`);
+        const url = `https://clob.polymarket.com/prices-history?market=${asset}&startTs=${traderTimestamp - 60}&endTs=${traderTimestamp + 60}&fidelity=1`;
+        const data = await fetchData(url) as { history: Array<{ t: number; p: number }> };
+        const history = data?.history ?? [];
+        if (history.length === 0) {
+            Logger.info(`🕐 Marché au moment du trade : aucune donnée disponible`);
             return;
         }
-        const clobPrice = parseFloat(data[0].price);
+        const closest = history.reduce((a, b) => Math.abs(a.t - traderTimestamp) < Math.abs(b.t - traderTimestamp) ? a : b);
+        const clobPrice = closest.p;
         const diff = Math.abs(clobPrice - traderPrice);
         const confirmed = diff < 0.05;
         const icon = confirmed ? '✅' : '⚠️';
         const label = confirmed ? 'confirmé — trade frais' : 'différent — trade ancien ou avg price';
         Logger.info(`🕐 Marché au moment du trade : $${clobPrice.toFixed(4)} ${icon} ${label} (trader: $${traderPrice.toFixed(4)})`);
-    } catch {
-        // Info supplémentaire — ne pas bloquer si l'appel échoue
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        Logger.info(`🕐 Marché au moment du trade : erreur API CLOB (${msg.slice(0, 60)})`);
     }
+};
+
+/**
+ * Analyse l'historique des prix depuis l'achat du trader pour trouver
+ * combien de temps il a fallu pour atteindre le seuil de prix (ex: MAX_BUY_PRICE).
+ * Utile pour diagnostiquer les trades détectés avec retard (> 5 min).
+ */
+const logTimeToReachPriceThreshold = async (
+    asset: string,
+    traderTimestamp: number,
+    traderPrice: number,
+    threshold: number,
+    currentAsk?: number
+): Promise<void> => {
+    try {
+        const nowTs = Math.floor(Date.now() / 1000);
+        const url = `https://clob.polymarket.com/prices-history?market=${asset}&startTs=${traderTimestamp}&endTs=${nowTs}&fidelity=1`;
+        const data = await fetchData(url) as { history: Array<{ t: number; p: number }> };
+
+        if (!data?.history || data.history.length === 0) {
+            Logger.info(`📊 Historique des prix: aucune donnée disponible`);
+            return;
+        }
+
+        // Trouver le premier point où le prix a dépassé le seuil
+        const crossingPoint = data.history.find(h => h.p >= threshold);
+
+        if (crossingPoint) {
+            const secAfterTrade = crossingPoint.t - traderTimestamp;
+            const minAfterTrade = Math.floor(secAfterTrade / 60);
+            const secRem = secAfterTrade % 60;
+            const timeStr = minAfterTrade > 0
+                ? `${minAfterTrade}m${secRem.toString().padStart(2, '0')}s`
+                : `${secAfterTrade}s`;
+            Logger.info(
+                `📈 Prix ≥ $${threshold.toFixed(2)} atteint ${timeStr} après l'achat du trader ` +
+                `(trader: $${traderPrice.toFixed(4)} → $${crossingPoint.p.toFixed(4)} @ ${new Date(crossingPoint.t * 1000).toLocaleTimeString()})`
+            );
+        } else {
+            const lastPoint = data.history[data.history.length - 1];
+            const lastPrice = lastPoint?.p;
+            const lastTradeTs = lastPoint?.t;
+            const lastTradeTime = lastTradeTs
+                ? new Intl.DateTimeFormat('fr-CA', {
+                    timeZone: 'America/Montreal',
+                    month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+                  }).format(new Date(lastTradeTs * 1000))
+                : '?';
+
+            // Si l'ask actuel est au-dessus du seuil mais qu'aucun trade réel n'y est passé :
+            // le marché a sauté via order book (résolution, event) sans transactions intermédiaires.
+            if (currentAsk !== undefined && currentAsk >= threshold) {
+                // Interroger l'API gamma pour savoir si le marché est résolu et à quelle heure
+                let resolutionInfo = '';
+                try {
+                    const gammaData = await fetchData(
+                        `https://gamma-api.polymarket.com/markets?clob_token_ids=${asset}`
+                    ) as Array<{ resolved?: boolean; resolutionDateTime?: string }>;
+                    const market = gammaData?.[0];
+                    if (market?.resolved && market?.resolutionDateTime) {
+                        const resStr = new Intl.DateTimeFormat('fr-CA', {
+                            timeZone: 'America/Montreal',
+                            month: '2-digit', day: '2-digit',
+                            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+                        }).format(new Date(market.resolutionDateTime));
+                        resolutionInfo = ` — 🏁 marché résolu @ ${resStr} Montréal`;
+                    } else if (market && !market.resolved) {
+                        resolutionInfo = ` — marché non résolu (spread extrême)`;
+                    }
+                } catch { /* ignore si gamma API indisponible */ }
+
+                Logger.info(
+                    `📊 Saut de prix sans trade intermédiaire : dernier trade $${lastPrice?.toFixed(4) ?? '?'} @ ${lastTradeTime}` +
+                    ` → ask actuel $${currentAsk.toFixed(4)}${resolutionInfo}`
+                );
+            } else {
+                Logger.info(
+                    `📊 Prix n'a pas atteint $${threshold.toFixed(2)} depuis l'achat du trader ` +
+                    `(dernier trade: $${lastPrice?.toFixed(4) ?? '?'} @ ${lastTradeTime})`
+                );
+            }
+        }
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        Logger.info(`📈 Historique des prix : erreur API (${msg.slice(0, 60)})`);
+    }
+};
+
+/**
+ * Affiche le prix du marché il y a N secondes (par rapport au timestamp du trade du trader).
+ * Permet de voir si le marché bougeait déjà avant que le trader achète.
+ */
+const logMarketPriceNSecBefore = async (
+    asset: string,
+    traderTimestamp: number,
+    traderPrice: number,
+    secondsBefore: number
+): Promise<void> => {
+    try {
+        const targetTs = traderTimestamp - secondsBefore;
+        const url = `https://clob.polymarket.com/prices-history?market=${asset}&startTs=${targetTs - 60}&endTs=${targetTs + 60}&fidelity=1`;
+        const data = await fetchData(url) as { history: Array<{ t: number; p: number }> };
+        const history = data?.history ?? [];
+        if (history.length === 0) {
+            Logger.info(`📅 Prix il y a ${secondsBefore}s : aucune donnée disponible`);
+            return;
+        }
+        const closest = history.reduce((a, b) => Math.abs(a.t - targetTs) < Math.abs(b.t - targetTs) ? a : b);
+        const oldPrice = closest.p;
+        const pct = ((traderPrice - oldPrice) / oldPrice * 100);
+        const sign = pct >= 0 ? '+' : '';
+        const arrow = pct > 5 ? '📈' : pct < -5 ? '📉' : '➡️';
+        Logger.info(
+            `${arrow} Prix il y a ${secondsBefore}s : $${oldPrice.toFixed(4)} → trader @ $${traderPrice.toFixed(4)} (${sign}${pct.toFixed(1)}% en ${secondsBefore}s)`
+        );
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        Logger.info(`📅 Prix il y a ${secondsBefore}s : erreur API CLOB (${msg.slice(0, 60)})`);
+    }
+};
+
+// ─── ORDER BOOK CACHE (pré-chauffage depuis le callback blockchain) ──────────
+// Le callback blockchainMonitor démarre le fetch order book ~150ms avant postOrder.
+// Si le cache est < 1.5s, on évite un appel HTTP supplémentaire (~200ms économisés).
+interface OrderBookCacheEntry { book: any; ts: number }
+const _orderBookCache = new Map<string, OrderBookCacheEntry>();
+const ORDER_BOOK_CACHE_MS = 1500;
+
+/** Injecte un order book pré-chauffé (appelé depuis tradeExecutor.ts) */
+export const setPreWarmedOrderBook = (tokenId: string, book: any): void => {
+    _orderBookCache.set(tokenId, { book, ts: Date.now() });
+};
+
+const getOrderBookCached = async (clobClient: ClobClient, tokenId: string): Promise<any> => {
+    const cached = _orderBookCache.get(tokenId);
+    if (cached && Date.now() - cached.ts < ORDER_BOOK_CACHE_MS) {
+        Logger.info(`⚡ Order book cache hit (${Math.round(Date.now() - cached.ts)}ms)`);
+        return cached.book;
+    }
+    const book = await clobClient.getOrderBook(tokenId);
+    _orderBookCache.set(tokenId, { book, ts: Date.now() });
+    return book;
 };
 
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
@@ -49,8 +196,9 @@ const COPY_PERCENTAGE = ENV.COPY_PERCENTAGE;
 const MIN_ORDER_SIZE_USD = ENV.MIN_ORDER_SIZE_USD ?? 1.0; // Minimum order size in USD for BUY orders
 const MIN_ORDER_SIZE_TOKENS = ENV.MIN_ORDER_SIZE_TOKENS ?? 1.0; // Minimum order size in tokens for SELL/MERGE orders
 
-// Slippage protection (configurable via .env)
-const MAX_SLIPPAGE_PERCENT = parseFloat(process.env.MAX_SLIPPAGE_PERCENT || '5.0');
+// Slippage protection — lu depuis ENV à chaque appel pour supporter le hot-reload
+// (ne pas stocker en constante module-level — la valeur serait figée au démarrage)
+const getMaxSlippagePercent = () => ENV.MAX_SLIPPAGE_PERCENT;
 
 /**
  * Check if a BUY price is acceptable:
@@ -100,11 +248,12 @@ const calculateSlippage = (currentPrice: number, traderPrice: number): number =>
 const checkSlippageAllowed = (currentPrice: number, traderPrice: number): { allowed: boolean; slippage: number; reason?: string } => {
     const slippage = calculateSlippage(currentPrice, traderPrice);
     
-    if (slippage > MAX_SLIPPAGE_PERCENT) {
+    const maxSlippage = getMaxSlippagePercent();
+    if (slippage > maxSlippage) {
         return {
             allowed: false,
             slippage,
-            reason: `Slippage trop élevé: ${slippage.toFixed(2)}% > ${MAX_SLIPPAGE_PERCENT}% max (prix marché: $${currentPrice.toFixed(4)} vs trader: $${traderPrice.toFixed(4)})`
+            reason: `Slippage trop élevé: ${slippage.toFixed(2)}% > ${maxSlippage}% max (prix marché: $${currentPrice.toFixed(4)} vs trader: $${traderPrice.toFixed(4)})`
         };
     }
     
@@ -214,6 +363,14 @@ const postOrder = async (
                 return;
             }
 
+            // Logs diagnostiques — attendus en DRY_RUN (latence non-critique en simulation)
+            if (trade.asset && trade.timestamp && trade.price) {
+                await Promise.all([
+                    logMarketPriceAtTraderTime(trade.asset, trade.timestamp, trade.price),
+                    logMarketPriceNSecBefore(trade.asset, trade.timestamp, trade.price, 10),
+                ]).catch(() => {});
+            }
+
             // Price protection: block near-resolved markets and high-price traps
             if (trade.price) {
                 const priceCheck = checkPriceAcceptable(trade.price);
@@ -222,12 +379,6 @@ const postOrder = async (
                     await UserActivity.updateOne({ _id: trade._id }, { bot: true });
                     return;
                 }
-            }
-
-            // Vérifier le prix CLOB au moment exact où le trader a exécuté
-            // Permet de savoir si le trade est frais (confirmé) ou ancien (avg price stale)
-            if (trade.asset && trade.timestamp && trade.price) {
-                await logMarketPriceAtTraderTime(trade.asset, trade.timestamp, trade.price);
             }
 
             const virtualBalance = simTracker.getBalance();
@@ -240,13 +391,38 @@ const postOrder = async (
             Logger.info(`📊 ${orderCalc.reasoning}`);
 
             if (orderCalc.finalAmount > 0 && trade.price) {
+                // Prix actuel + quand le seuil a été atteint — attendus en DRY_RUN (latence non-critique)
+                const _asset = trade.asset, _ts = trade.timestamp, _price = trade.price;
+                let _currentAsk: number | undefined;
+                try {
+                    const bookNow = await fetchData(
+                        `https://clob.polymarket.com/book?token_id=${_asset}`
+                    ) as { bids: Array<{ price: string }>; asks: Array<{ price: string }> };
+                    if (bookNow?.asks?.[0]) {
+                        _currentAsk = parseFloat(bookNow.asks[0].price);
+                        const delayFromTrader = Math.round(Date.now() / 1000 - _ts);
+                        const priceNowCheck = checkPriceAcceptable(_currentAsk);
+                        const icon = priceNowCheck.allowed ? '✅' : '❌';
+                        const verdict = priceNowCheck.allowed
+                            ? `exécution immédiate POSSIBLE @ $${_currentAsk.toFixed(4)}`
+                            : `exécution immédiate AUSSI REFUSÉE — ${priceNowCheck.reason}`;
+                        Logger.info(
+                            `${icon} Prix à la détection (+${delayFromTrader}s) : ask $${_currentAsk.toFixed(4)} — ${verdict}`
+                        );
+                        // Note: on ne rejette plus dans le cache — le limit order watcher
+                        // surveille le book et achète quand les market makers reviennent.
+                    }
+                } catch { /* ignore */ }
+                await logTimeToReachPriceThreshold(_asset, _ts, _price, ENV.MAX_BUY_PRICE, _currentAsk);
+
                 try {
                     const result = await executeSimulatedTrade(
                         trade.asset,
                         'BUY',
                         orderCalc.finalAmount,
                         trade.price,
-                        userAddress
+                        userAddress,
+                        { conditionId: trade.conditionId, title: trade.title, outcome: trade.outcome, eventSlug: trade.eventSlug }
                     );
 
                     if (!result.success) {
@@ -261,17 +437,10 @@ const postOrder = async (
                         return;
                     }
 
-                    // Secondary price check: verify the ACTUAL execution price (order book ask)
-                    // The initial check used trade.price (trader's historical price), but the
-                    // order book may return a much higher current price (e.g. $0.27 → $0.99)
-                    if (result.avgPrice) {
-                        const execPriceCheck = checkPriceAcceptable(result.avgPrice);
-                        if (!execPriceCheck.allowed) {
-                            Logger.warning(`🚫 [SIMULATION] Trade annulé — prix d'exécution réel inacceptable: ${execPriceCheck.reason}`);
-                            Logger.warning(`   (trader avait acheté à $${trade.price?.toFixed(4)}, marché actuel à $${result.avgPrice.toFixed(4)})`);
-                            await UserActivity.updateOne({ _id: trade._id }, { bot: true });
-                            return;
-                        }
+                    // Limit order en attente — pas encore exécuté, ne pas tracker la position
+                    if (!result.executed) {
+                        Logger.info(`⏳ [SIMULATION] BUY queued as limit order — will execute when ask ≤ $${(trade.price * 1.15).toFixed(4)}`);
+                        return;
                     }
 
                     Logger.success(
@@ -307,7 +476,8 @@ const postOrder = async (
                         result.tokensTraded || (orderCalc.finalAmount / trade.price),
                         result.avgPrice || trade.price,
                         orderCalc.finalAmount,
-                        userAddress
+                        userAddress,
+                        trade.eventSlug
                     );
                 } catch (error) {
                     Logger.error(`❌ [SIMULATION] BUY failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -454,14 +624,14 @@ const postOrder = async (
         let retry = 0;
         let abortDueToFunds = false;
         while (remaining > 0 && retry < RETRY_LIMIT) {
-            const orderBook = await clobClient.getOrderBook(trade.asset);
+            const orderBook = await getOrderBookCached(clobClient, trade.asset);
             if (!orderBook.bids || orderBook.bids.length === 0) {
                 Logger.warning('No bids available in order book');
                 await UserActivity.updateOne({ _id: trade._id }, { bot: true });
                 break;
             }
 
-            const maxPriceBid = orderBook.bids.reduce((max, bid) => {
+            const maxPriceBid = orderBook.bids.reduce((max: any, bid: any) => {
                 return parseFloat(bid.price) > parseFloat(max.price) ? bid : max;
             }, orderBook.bids[0]);
 
@@ -556,9 +726,14 @@ const postOrder = async (
             }
         }
 
-        // Vérifier le prix CLOB au moment exact du trade du trader
+        // Logs diagnostiques en arrière-plan — NE bloquent PAS l'exécution du trade
+        // (chaque appel ~200-400ms → ~600ms économisés sur le chemin critique en mode réel)
         if (trade.asset && trade.timestamp && trade.price) {
-            await logMarketPriceAtTraderTime(trade.asset, trade.timestamp, trade.price);
+            const _a = trade.asset, _ts = trade.timestamp, _pr = trade.price;
+            Promise.all([
+                logMarketPriceAtTraderTime(_a, _ts, _pr),
+                logTimeToReachPriceThreshold(_a, _ts, _pr, ENV.MAX_BUY_PRICE),
+            ]).catch(() => {});
         }
 
         // Check MAX_OPEN_POSITIONS limit (if configured)
@@ -621,14 +796,14 @@ const postOrder = async (
         let totalBoughtTokens = 0; // Track total tokens bought for this trade
 
         while (remaining > 0 && retry < RETRY_LIMIT) {
-            const orderBook = await clobClient.getOrderBook(trade.asset);
+            const orderBook = await getOrderBookCached(clobClient, trade.asset);
             if (!orderBook.asks || orderBook.asks.length === 0) {
                 Logger.warning('No asks available in order book');
                 await UserActivity.updateOne({ _id: trade._id }, { bot: true });
                 break;
             }
 
-            const minPriceAsk = orderBook.asks.reduce((min, ask) => {
+            const minPriceAsk = orderBook.asks.reduce((min: any, ask: any) => {
                 return parseFloat(ask.price) < parseFloat(min.price) ? ask : min;
             }, orderBook.asks[0]);
 
@@ -676,7 +851,7 @@ const postOrder = async (
                     logBotEvent('WARNING', 'Trade skipped due to high slippage', {
                         asset: trade.asset,
                         slippage: slippageCheck.slippage,
-                        maxAllowed: MAX_SLIPPAGE_PERCENT,
+                        maxAllowed: getMaxSlippagePercent(),
                         currentPrice: parseFloat(minPriceAsk.price),
                         traderPrice: trade.price
                     });
@@ -801,7 +976,8 @@ const postOrder = async (
                 totalBoughtTokens,
                 trade.price,
                 orderCalc.finalAmount,
-                userAddress
+                userAddress,
+                trade.eventSlug
             );
         }
     } else if (condition === 'sell') {
@@ -944,14 +1120,14 @@ const postOrder = async (
         let totalSoldTokens = 0; // Track total tokens sold
 
         while (remaining > 0 && retry < RETRY_LIMIT) {
-            const orderBook = await clobClient.getOrderBook(trade.asset);
+            const orderBook = await getOrderBookCached(clobClient, trade.asset);
             if (!orderBook.bids || orderBook.bids.length === 0) {
                 await UserActivity.updateOne({ _id: trade._id }, { bot: true });
                 Logger.warning('No bids available in order book');
                 break;
             }
 
-            const maxPriceBid = orderBook.bids.reduce((max, bid) => {
+            const maxPriceBid = orderBook.bids.reduce((max: any, bid: any) => {
                 return parseFloat(bid.price) > parseFloat(max.price) ? bid : max;
             }, orderBook.bids[0]);
 
