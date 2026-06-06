@@ -49,3 +49,10 @@ jest-test-results.json
 .yarn
 simulation_results
 trader_data_cache
+
+# Private local trading data (keep local, never commit)
+body.json
+data/pending_limit_orders.json
+data/trade_history.json
+data/positions.json
+data/copyable_traders.txt
